@@ -1,0 +1,8 @@
+{
+  "name": "PerceptualComputingProj",
+  "version": "1.0.0",
+  "dependencies": {},
+  "devDependencies": {
+    "@tensorflow-models/posenet": "^1.0.3"
+  }
+}
