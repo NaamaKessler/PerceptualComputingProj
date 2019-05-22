@@ -1,0 +1,89 @@
+
+body {
+	background-color: #FDFEEE;
+
+}
+
+.im {
+    text-align: center;
+    color: black;
+	padding: 0;
+    margin: 0;
+    display: block;
+    position: relative;
+    left: 10%;
+}
+
+
+#bla {
+	position: absolute;
+    top: 50%;
+    left: 15%;
+    transform: translate(-50%, -50%);
+    color: #191917;
+    font-size: 100px;
+    font-family: calibri;
+}
+
+#secondary_bla {
+	position: absolute;
+    top: 60%;
+    left: 25%;
+    transform: translate(-50%, -50%);
+    color: #191917;
+    font-size: 100px;
+    font-family: calibri;
+}
+
+
+#seperating_line {
+	background-color: #AEB2A5;
+	padding: 1px;
+	margin: 0;
+}
+
+#logo {
+	background-color: #FDFEEE;
+	padding: 40px;
+	font-family: calibri;
+	font-size: 40px;
+	color: #4b4c47;
+}
+
+
+#button1 {
+	background-color: #7b7c73;
+	border: none;
+  	color: white;
+  	padding: 15px 35px;
+  	text-align: center;
+  	text-decoration: none;
+  	display: inline-block;
+  	font-size: 35px;
+  	position: absolute;
+    top: 85%;
+    left: 22%;
+    font-family: calibri;
+    cursor:pointer;
+}
+
+#sub_title {
+	text-align: center;
+	font-size: 80px;
+	font-family: calibri;
+	color: #191917;
+	padding: 150px  0px 0px 0px;
+}
+
+.icon {
+	text-align: center;
+	background: #FDFEEE;
+	float: left;
+	width: 31%;
+	margin: 1%;
+	padding: 150px 0.5px;
+	font-size: 35px;
+	font-family: calibri;
+	color: #4b4c47;
+
+}
