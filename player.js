@@ -12,6 +12,10 @@ let video;
 let poseNet;
 let poses = [];
 let COUNTER = 0;
+// var coolSong = new Audio('https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/Swing_Jazz_Drum.mp3');
+// function play_sound() {
+//     document.getElementById('myaudio').play();
+// }
 let COUNTDOWN = 0;
 var delayInMilliseconds = 10000; //10 second
 
@@ -116,6 +120,7 @@ function poseDetection() {
                             COUNTER++;
                             if (COUNTER === 10) {
                                 console.log("Hoooo yeee pose detected!!!");
+                                playPups();
                                 COUNTER = 0;
                                 COUNTDOWN = 30;
                             }
@@ -128,17 +133,58 @@ function poseDetection() {
 }
 
 
+// Youtube things
+// 2. This code loads the IFrame Player API code asynchronously.
+var tag = document.createElement('script');
 
-// Grave yard
-//         //         if (pose.keypoints[left_wrist].position.y < pose.keypoints[left_elbow].position.y &&
-//         //             pose.keypoints[right_wrist].position.y < pose.keypoints[right_elbow].position.y) {
-//         //             if (pose.keypoints[left_wrist].position.x >  pose.keypoints[left_elbow].position.x &&
-//         //                 pose.keypoints[right_wrist].position.x >  pose.keypoints[right_elbow].position.x) {
-//         //                 ON_COUNTER += 1;
-//         //                 if (ON_COUNTER === ON_THRESHOLD) {
-//         //                     ON_COUNTER = 0;
-//         //                     window.alert(" on detected");
-//         //                 }
-//         //             }
-//         //         }
-//         //
+tag.src = "http://www.youtube.com/iframe_api";
+var firstScriptTag = document.getElementsByTagName('script')[0];
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+// 3. This function creates an <iframe> (and YouTube player)
+//    after the API code downloads.
+var player;
+function onYouTubeIframeAPIReady() {
+    player = new YT.Player('player', {
+        height: '390',
+        width: '640',
+        videoId: 'ZZb_ZtjVxUQ',
+        events: {
+            'onReady': onPlayerReady,
+            'onStateChange': onPlayerStateChange
+        }
+    });
+}
+
+// 4. The API will call this function when the video player is ready.
+function onPlayerReady(event) {
+    event.target.playVideo();
+}
+
+// 5. The API calls this function when the player's state changes.
+//    The function indicates that when playing a video (state=1),
+//    the player should play for six seconds and then stop.
+var done = false;
+function onPlayerStateChange(event) {
+    // if (event.data == YT.PlayerState.PLAYING && !done) {
+    //     setTimeout(stopVideo, 6000);
+    //     done = true;
+    // }
+}
+function pausePups() {
+    player.pauseVideo();
+}
+
+function playPups() {
+    player.playVideo();
+}
+
+function raiseVolume() {
+    var currVolume = player.getVolume();
+    player.setVolume(currVolume += 10);
+}
+
+function puppiesAreTooLoud() {
+    var currVolume = player.getVolume();
+    player.setVolume(currVolume -= 10);
+}
