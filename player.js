@@ -11,7 +11,9 @@ PoseNet example using p5.js
 let video;
 let poseNet;
 let poses = [];
-var delayInMilliseconds = 3000; //3 second
+let COUNTER = 0;
+let COUNTDOWN = 0;
+var delayInMilliseconds = 10000; //10 second
 
 function setup() {
     createCanvas(640, 480);
@@ -40,10 +42,10 @@ function draw() {
 // We can call both functions to draw all keypoints and the skeletons
     drawKeypoints();
     drawSkeleton();
-    setTimeout(function() {
-        //your code to be executed after 1 second
+    // setTimeout(function() {
+    //     your code to be executed after 1 second
         poseDetection();
-    }, delayInMilliseconds);
+    // }, delayInMilliseconds);
 }
 
 // A function to draw ellipses over the detected keypoints
@@ -102,9 +104,32 @@ function poseDetection() {
         wrist_dist = Math.sqrt(Math.pow((pose.keypoints[left_wrist].position.y - pose.keypoints[right_wrist].position.y), 2) +
             Math.pow((pose.keypoints[left_wrist].position.x - pose.keypoints[right_wrist].position.x), 2));
 //
-        if (Math.abs(pose.keypoints[left_elbow].position.y - pose.keypoints[right_elbow].position.y) < eyes_dist) {   // elbow's hight
-            if (wrist_dist < eyes_dist) {
-                window.alert("elbows & wrists");
+        if (COUNTDOWN > 0) {
+            COUNTDOWN -=1;
+            return;
+        }
+        if(pose.keypoints[left_elbow].score > 0.6 && pose.keypoints[right_elbow].score > 0.6){
+            if (Math.abs(pose.keypoints[left_elbow].position.y - pose.keypoints[right_elbow].position.y) < eyes_dist) {   // elbow's hight
+                if (pose.keypoints[left_wrist].score > 0.3 && pose.keypoints[right_wrist].score > 0.3 && wrist_dist < 1.5*ears_dist) {
+                    if (pose.keypoints[right_wrist].position.x > pose.keypoints[right_elbow].position.x &&
+                        pose.keypoints[left_wrist].position.x < pose.keypoints[left_elbow].position.x) {
+                            COUNTER++;
+                            if (COUNTER === 10) {
+                                console.log("Hoooo yeee pose detected!!!");
+                                COUNTER = 0;
+                                COUNTDOWN = 30;
+                            }
+
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+// Grave yard
 //         //         if (pose.keypoints[left_wrist].position.y < pose.keypoints[left_elbow].position.y &&
 //         //             pose.keypoints[right_wrist].position.y < pose.keypoints[right_elbow].position.y) {
 //         //             if (pose.keypoints[left_wrist].position.x >  pose.keypoints[left_elbow].position.x &&
@@ -117,8 +142,3 @@ function poseDetection() {
 //         //             }
 //         //         }
 //         //
-            }
-        }
-    }
-}
-
