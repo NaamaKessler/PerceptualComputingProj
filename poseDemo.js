@@ -1,35 +1,24 @@
-//----------------------INIT YOUTUBE---------------------------//
+// Copyright (c) 2018 ml5
+//
+// This software is released under the MIT License.
+// https://opensource.org/licenses/MIT
 
-// This code loads the IFrame Player API code asynchronously.
-var tag = document.createElement('script');
-tag.src = "https://www.youtube.com/iframe_api";
-var firstScriptTag = document.getElementsByTagName('script')[0];
-firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-/**
- * This function creates an <iframe> (and YouTube poseDemo) after the API code downloads.
- */
-var player;
-function onYouTubeIframeAPIReady() {
-    player = new YT.Player('player', {
-        height: '390',
-        width: '640',
-        videoId: 'ZZb_ZtjVxUQ',
-        events: {}
-    });
-}
-
-//---------------------INIT POSE NET------------------------------//
+/* ===
+ml5 Example
+PoseNet example using p5.js
+=== */
 
 let video;
 let poseNet;
 let poses = [];
 let COUNTER = 0;
+// var coolSong = new Audio('https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/Swing_Jazz_Drum.mp3');
+// function play_sound() {
+//     document.getElementById('myaudio').play();
+// }
 let COUNTDOWN = 0;
+var delayInMilliseconds = 10000; //10 second
 
-/**
- * Sets up the poseNet library:
- */
 function setup() {
     createCanvas(640, 480);
     video = createCapture(VIDEO);
@@ -44,35 +33,32 @@ function setup() {
     });
     // Hide the video element, and just show the canvas
     video.hide();
+
 }
 
-/**
- * prints(?) to the screen 'Model Loaded' when the model is ready.
- */
 function modelReady() {
     select('#status').html('Model Loaded');
 }
 
-//--------------------------GIVE POSE FEEDBACK----------------------------//
-/**
- * Draws the skeleton and key points of each pose when detected.
- */
 function draw() {
     image(video, 0, 0, width, height);
+
+// We can call both functions to draw all keypoints and the skeletons
     drawKeypoints();
     drawSkeleton();
+    // setTimeout(function() {
+    //     your code to be executed after 1 second
     poseDetection();
+    // }, delayInMilliseconds);
 }
 
-/**
- * A function to draw ellipses over the detected key points.
- */
+// A function to draw ellipses over the detected keypoints
 function drawKeypoints()  {
     // Loop through all the poses detected
     for (let i = 0; i < poses.length; i++) {
         // For each pose detected, loop through all the keypoints
         let pose = poses[i].pose;
-        if (pose) { // TODO: Why does it sometimes invalid?
+        if (pose) {
             for (let j = 0; j < pose.keypoints.length; j++) {
                 // A keypoint is an object describing a body part (like rightArm or leftShoulder)
                 let keypoint = pose.keypoints[j];
@@ -87,9 +73,7 @@ function drawKeypoints()  {
     }
 }
 
-/**
- * A function to draw the skeletons.
- */
+// A function to draw the skeletons
 function drawSkeleton() {
     // Loop through all the skeletons detected
     for (let i = 0; i < poses.length; i++) {
@@ -105,34 +89,8 @@ function drawSkeleton() {
 }
 
 
-//----------------------------PLAYER CONTROL-----------------------------//
-
-function pauseVid() {
-    player.pauseVideo();
-}
-
-function playVid() {
-    player.playVideo();
-}
-
-function raiseVolume() {
-    var currVolume = player.getVolume();
-    player.setVolume(currVolume += 10);
-}
-
-function decreseVolume() {
-    var currVolume = player.getVolume();
-    player.setVolume(currVolume -= 10);
-}
-
-//----------------------------POSE DETECTION--------------------------------//
-
-/**
- * This function inspects the current pose and checks if its a spacial pose.
- * If the pose detected is indeed spacial, the function starts the action triggered by it.
- */
 function poseDetection() {
-    for (let i = 0; i < poses.length; i++) {
+    for (let i = 0; i < poses.length; i++) { // For each pose detected, loop through all the keypoints
         let pose = poses[i].pose;
         if (!pose) {
             continue;
@@ -162,7 +120,7 @@ function poseDetection() {
                         COUNTER++;
                         if (COUNTER === 10) {
                             console.log("Hoooo yeee pose detected!!!");
-                            playVid();
+                            playPups();
                             COUNTER = 0;
                             COUNTDOWN = 30;
                         }
@@ -172,4 +130,61 @@ function poseDetection() {
             }
         }
     }
+}
+
+
+// Youtube things
+// 2. This code loads the IFrame Player API code asynchronously.
+var tag = document.createElement('script');
+
+tag.src = "http://www.youtube.com/iframe_api";
+var firstScriptTag = document.getElementsByTagName('script')[0];
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+// 3. This function creates an <iframe> (and YouTube player)
+//    after the API code downloads.
+var player;
+function onYouTubeIframeAPIReady() {
+    player = new YT.Player('player', {
+        height: '390',
+        width: '640',
+        videoId: 'ZZb_ZtjVxUQ',
+        events: {
+            'onReady': onPlayerReady,
+            'onStateChange': onPlayerStateChange
+        }
+    });
+}
+
+// 4. The API will call this function when the video player is ready.
+function onPlayerReady(event) {
+    event.target.playVideo();
+}
+
+// 5. The API calls this function when the player's state changes.
+//    The function indicates that when playing a video (state=1),
+//    the player should play for six seconds and then stop.
+var done = false;
+function onPlayerStateChange(event) {
+    // if (event.data == YT.PlayerState.PLAYING && !done) {
+    //     setTimeout(stopVideo, 6000);
+    //     done = true;
+    // }
+}
+function pausePups() {
+    player.pauseVideo();
+}
+
+function playPups() {
+    player.playVideo();
+}
+
+function raiseVolume() {
+    var currVolume = player.getVolume();
+    player.setVolume(currVolume += 10);
+}
+
+function puppiesAreTooLoud() {
+    var currVolume = player.getVolume();
+    player.setVolume(currVolume -= 10);
 }
