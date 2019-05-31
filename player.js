@@ -4,15 +4,15 @@
 //----------------------INIT YOUTUBE---------------------------//
 
 // This code loads the IFrame Player API code asynchronously.
-var tag = document.createElement('script');
+let tag = document.createElement('script');
 tag.src = "https://www.youtube.com/iframe_api";
-var firstScriptTag = document.getElementsByTagName('script')[0];
+let firstScriptTag = document.getElementsByTagName('script')[0];
 firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
 /**
  * This function creates an <iframe> (and YouTube poseDemo) after the API code downloads.
  */
-var player;
+let player;
 function onYouTubeIframeAPIReady() {
     player = new YT.Player('player', {
         height: '390',
@@ -37,7 +37,7 @@ function setup() {
     video.size(width, height);
 
     // Create a new poseNet method with a single detection
-    poseNet = ml5.poseNet(video, detectionType='single', modelReady);
+    poseNet = ml5.poseNet(video, 'single', modelReady);
     // This sets up an event that fills the global variable "poses"
     // with an array every time new poses are detected (listeners)
     poseNet.on('pose', function(results) {
@@ -117,13 +117,13 @@ function playVid() {
 }
 
 function raiseVolume() {
-    var currVolume = player.getVolume();
-    player.setVolume(currVolume += 10);
+    const currVolume = player.getVolume() + 10;
+    player.setVolume(currVolume);
 }
 
 function decreseVolume() {
-    var currVolume = player.getVolume();
-    player.setVolume(currVolume -= 10);
+    const currVolume = player.getVolume() - 10;
+    player.setVolume(currVolume);
 }
 
 //----------------------------POSE DETECTION--------------------------------//
@@ -145,9 +145,9 @@ const WRIST_THRESH = 0.3;
 const ELBOW_THRESH = 0.6;
 
 // Pose sensitivity:
-const SLEEP_TIME = 30;
-const OM_SENSITIVITY = 10;  // Determines how many Oms in a row we consider as a true Om (not noise)
-const LISTENING_TIME = 70;
+const SLEEP_TIME = 7;
+const OM_SENSITIVITY = 4;  // Determines how many Oms in a row we consider as a true Om (not noise)
+const LISTENING_TIME = 200;
 
 
 //---------------GLOBALS
@@ -213,7 +213,7 @@ function elbowsAligned(pose, errThresh){
  * @param errThresh
  */
 function closeWrists(pose, errThresh){
-    var wrist_dist = euclidDist(pose, LEFT_WRIST, RIGHT_WRIST);
+    const wrist_dist = euclidDist(pose, LEFT_WRIST, RIGHT_WRIST);
     return checkScore(pose, LEFT_WRIST, WRIST_THRESH) &&
         checkScore(pose, RIGHT_WRIST, WRIST_THRESH) && wrist_dist < errThresh;
 }
@@ -235,9 +235,8 @@ function wristsInwards(pose){
  */
 function detectOm(pose) {
     let eyes_dist = euclidDist(pose, LEFT_EYE, RIGHT_EYE);
-    let ears_dist = euclidDist(pose, LEFT_EAR, RIGHT_EAR);
 
-    if(elbowsAligned(pose, eyes_dist) && closeWrists(pose, 1.5*ears_dist) && wristsInwards(pose)){
+    if(elbowsAligned(pose, eyes_dist) && closeWrists(pose, 1.9*eyes_dist) && wristsInwards(pose)){
         counter++;
         if (counter === OM_SENSITIVITY) { // If we detected enough Oms, its probably not a noise.
             counter = 0;
