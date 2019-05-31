@@ -106,7 +106,7 @@ function drawSkeleton() {
 }
 
 
-//----------------------------PLAYER CONTROL-----------------------------//
+//----------------------------PLAYER CONTROL-----------------------------// // TODO: those funcs are unnecessary & add vol const
 
 function pauseVid() {
     player.pauseVideo();
@@ -145,20 +145,26 @@ const WRIST_THRESH = 0.3;
 const ELBOW_THRESH = 0.6;
 
 // Pose sensitivity:
-const SLEEP_TIME = 7;
-const OM_SENSITIVITY = 4;  // Determines how many Oms in a row we consider as a true Om (not noise)
-const LISTENING_TIME = 200;
+const SLEEP_TIME = 20;       // Determines the number of poses we consider as "junk" after a spacial pose was detected.
+const OM_SENSITIVITY = 6;   // Determines how many Oms in a row we consider as a true Om (not noise)
+const LISTENING_TIME = 100; // Determines for how many iterations we listen to the user's commands after activation.
+
+// Directions
+const LEFT = 'L';
+const RIGHT = 'R';
+const UP = 'U';
+const DOWN = 'D';
 
 
 //---------------GLOBALS
 
 let counter = 0;
 let countdown = 0;
-let listeningTime = LISTENING_TIME;
+let listeningTimeLeft = LISTENING_TIME;
 let omsDetected = 0;
 let lastWristX;
 let lastWristY;
-let detectedDirections = [];
+let detectedDirections = "";         // A string contains the wrist movements detected in the listening period.
 // let rightCircleRegex = ;
 // let leftCircleRegex = ;
 
@@ -249,6 +255,62 @@ function detectOm(pose) {
 }
 
 /**
+ * Updates the last position of the right wrist.
+ * @param pose
+ */
+function updateWristCoords(pose) {
+    lastWristX = pose.keypoints[RIGHT_WRIST].position.x;
+    lastWristY = pose.keypoints[RIGHT_WRIST].position.y;
+}
+
+/**
+ * Records the wrist movements of the user and keeps them in the global array detectedDirections[].
+ * @param pose
+ */
+function recordWristMovement(pose){
+        if(checkScore(pose, RIGHT_WRIST, 0.6) && checkScore(pose, RIGHT_EYE, WRIST_THRESH)
+            && checkScore(pose, LEFT_EYE, WRIST_THRESH)){
+
+            let x_delta = pose.keypoints[RIGHT_WRIST].position.x - lastWristX;
+            let y_delta = pose.keypoints[RIGHT_WRIST].position.y - lastWristY;
+            let eyes_dist = euclidDist(pose, LEFT_EYE, RIGHT_EYE);
+
+            if (Math.abs(x_delta) > Math.abs(y_delta)) { // left-right movement
+                if (x_delta > 0.5*eyes_dist) {
+                    if(detectedDirections.substr(-1) !== LEFT){
+                        detectedDirections += LEFT;
+                    }
+                } else if(x_delta < -0.5*eyes_dist) {
+                    if (detectedDirections.substr(-1) !== RIGHT) {
+                        detectedDirections += RIGHT;
+                    }
+                }
+            }else { // up-down movement
+                if(y_delta >= 0.5 * eyes_dist) {
+                        if (detectedDirections.substr(-1) !== DOWN) {
+                            detectedDirections += DOWN;
+                        }
+                    } else if (x_delta < -0.5 * eyes_dist) {
+                        if (detectedDirections.substr(-1) !== UP) {
+                            detectedDirections += UP;
+                        }
+                    }
+                }
+        }
+}
+
+/**
+ * Searches for a right circle in detectedDirections.
+ * If a right / left circle was found, it calls the corresponding functions.
+ */
+function detectCircleAndRespond(){
+    //if right circle:
+    //  detectedDirections = "", raise volume.
+    //if left circle:
+    // detectedDirections = "", decrease volume
+}
+
+/**
  * This function inspects the current pose and checks if its a spacial pose.
  * If the pose detected is indeed spacial, the function starts the action triggered by it.
  */
@@ -271,24 +333,32 @@ function poseDetection() {
         if (omsDetected === 0) {
             console.log("Waits for activation");
             detectOm(pose);
+            updateWristCoords(pose); // for future circle detection.
             continue;
         }
 
         // After activated, listens for the next command:
-        if (listeningTime >= 0) {
+        if (listeningTimeLeft >= 0) {
             console.log("listening");
             if (detectOm(pose)) {
-                console.log("detected Om while listening.")
+                console.log("detected Om while listening.");
                 if (player.getPlayerState() !== 1) { // start playing
                     playVid();
                 } else { // stop playing
                     pauseVid();
                 }
+            } else {
+                // Listens for circles:
+                recordWristMovement(pose);
+                detectCircleAndRespond();
+                updateWristCoords(pose);
             }
-            listeningTime--;
+            listeningTimeLeft--;
         } else { // End of listening time.
             omsDetected = 0;
-            listeningTime = LISTENING_TIME;
+            listeningTimeLeft = LISTENING_TIME;
+            console.log(detectedDirections);
+            detectedDirections = "";
         }
     }
 }
@@ -320,9 +390,9 @@ function poseDetection() {
 //             }
 //         }
 //     }
-//     listeningTime -= 1;
+//     listeningTimeLeft -= 1;
 // }
-// if (listeningTime === 0) { // end of listening period
+// if (listeningTimeLeft === 0) { // end of listening period
 //     // todo - check regex to see if there is a circle
 //     omsDetected = 0;
 // }
