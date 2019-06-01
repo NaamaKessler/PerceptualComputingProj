@@ -141,13 +141,13 @@ const RIGHT_EAR = 4;
 const LEFT_EAR = 3;
 
 // Thresholds
-const WRIST_THRESH = 0.3;
+const WRIST_THRESH = 0.6;
 const ELBOW_THRESH = 0.6;
 
 // Pose sensitivity:
-const SLEEP_TIME = 20;       // Determines the number of poses we consider as "junk" after a spacial pose was detected.
-const OM_SENSITIVITY = 6;   // Determines how many Oms in a row we consider as a true Om (not noise)
-const LISTENING_TIME = 100; // Determines for how many iterations we listen to the user's commands after activation.
+const SLEEP_TIME = 45;       // Determines the number of poses we consider as "junk" after a spacial pose was detected.
+const OM_SENSITIVITY = 25;   // Determines how many Oms in a row we consider as a true Om (not noise)
+const LISTENING_TIME = 400; // Determines for how many iterations we listen to the user's commands after activation.
 
 // Directions
 const LEFT = 'L';
@@ -160,7 +160,7 @@ const DOWN = 'D';
 
 let counter = 0;
 let countdown = 0;
-let listeningTimeLeft = LISTENING_TIME;
+let listeningTimeLeft = 0;
 let omsDetected = 0;
 let lastWristX;
 let lastWristY;
@@ -241,13 +241,15 @@ function wristsInwards(pose){
  */
 function detectOm(pose) {
     let eyes_dist = euclidDist(pose, LEFT_EYE, RIGHT_EYE);
-
     if(elbowsAligned(pose, eyes_dist) && closeWrists(pose, 1.9*eyes_dist) && wristsInwards(pose)){
         counter++;
         if (counter === OM_SENSITIVITY) { // If we detected enough Oms, its probably not a noise.
             counter = 0;
-            countdown = SLEEP_TIME; // Do not detect a spacial pose for the next SLEEP_TIME iterations.
+            countdown = SLEEP_TIME; // Do not detect another pose for the next SLEEP_TIME iterations.
             omsDetected++;
+            listeningTimeLeft = LISTENING_TIME;
+            detectedDirections = ""; // Naama
+            console.log("detectedOms num: ", omsDetected);
             return true;
         }
     }
@@ -272,30 +274,58 @@ function recordWristMovement(pose){
             && checkScore(pose, LEFT_EYE, WRIST_THRESH)){
 
             let x_delta = pose.keypoints[RIGHT_WRIST].position.x - lastWristX;
+            // console.log("right wrist delta_x: ", x_delta);
             let y_delta = pose.keypoints[RIGHT_WRIST].position.y - lastWristY;
+            // console.log("right wrist delta_y: ", y_delta);
             let eyes_dist = euclidDist(pose, LEFT_EYE, RIGHT_EYE);
 
-            if (Math.abs(x_delta) > Math.abs(y_delta)) { // left-right movement
-                if (x_delta > 0.5*eyes_dist) {
-                    if(detectedDirections.substr(-1) !== LEFT){
-                        detectedDirections += LEFT;
-                    }
-                } else if(x_delta < -0.5*eyes_dist) {
-                    if (detectedDirections.substr(-1) !== RIGHT) {
-                        detectedDirections += RIGHT;
-                    }
+            // if (Math.abs(x_delta) > Math.abs(y_delta)) { // left-right movement
+                if (x_delta >= eyes_dist) {
+                    detectedDirections += LEFT;
+                    // if(detectedDirections.substr(-1) !== LEFT){
+                    //     detectedDirections += LEFT;
+                    // }
+                } else if (x_delta <= -eyes_dist) {
+                    detectedDirections += RIGHT;
+                    // if (detectedDirections.substr(-1) !== RIGHT) {
+                    //     detectedDirections += RIGHT;
+                    // }
                 }
-            }else { // up-down movement
-                if(y_delta >= 0.5 * eyes_dist) {
-                        if (detectedDirections.substr(-1) !== DOWN) {
-                            detectedDirections += DOWN;
-                        }
-                    } else if (x_delta < -0.5 * eyes_dist) {
-                        if (detectedDirections.substr(-1) !== UP) {
-                            detectedDirections += UP;
-                        }
-                    }
+            // }else { // up-down movement
+                if(y_delta >= eyes_dist) {
+                    detectedDirections += UP;
+                    // if (detectedDirections.substr(-1) !== UP) {
+                    //     detectedDirections += UP;
+                    // }
+                } else if (x_delta <= -eyes_dist) {
+                    detectedDirections += DOWN;
+                    // if (detectedDirections.substr(-1) !== DOWN) {
+                    //     detectedDirections += DOWN;
+                    // }
                 }
+            // }
+
+
+            //     if (x_delta >= 10) {
+            //         if(detectedDirections.substr(-1) !== LEFT){
+            //             detectedDirections += LEFT;
+            //         }
+            //     } else if (x_delta <= -10) {
+            //         if (detectedDirections.substr(-1) !== RIGHT) {
+            //             detectedDirections += RIGHT;
+            //         }
+            //     }
+            // }else { // up-down movement
+            //     if(y_delta >= 10) {
+            //             if (detectedDirections.substr(-1) !== DOWN) {
+            //                 detectedDirections += DOWN;
+            //             }
+            //         } else if (x_delta <= -10) {
+            //             if (detectedDirections.substr(-1) !== UP) {
+            //                 detectedDirections += UP;
+            //             }
+            //         }
+            //     }
         }
 }
 
@@ -326,7 +356,8 @@ function poseDetection() {
         // If we just detected a pose, the current pose is probably trash, so move on:
         if (countdown > 0) {
             countdown--;
-            return;
+            console.log("delaying");
+            return; //(Naama) todo: why return and not continue?
         }
 
         // Waits for activation:
@@ -334,31 +365,34 @@ function poseDetection() {
             console.log("Waits for activation");
             detectOm(pose);
             updateWristCoords(pose); // for future circle detection.
-            continue;
+            // continue; (Naama)
         }
-
-        // After activated, listens for the next command:
-        if (listeningTimeLeft >= 0) {
-            console.log("listening");
-            if (detectOm(pose)) {
-                console.log("detected Om while listening.");
-                if (player.getPlayerState() !== 1) { // start playing
-                    playVid();
-                } else { // stop playing
-                    pauseVid();
+        else {
+            // After activated, listens for the next command:
+            if (listeningTimeLeft > 0) {
+                console.log("listening");
+                if (detectOm(pose)) {
+                    console.log("detected Om while listening.");
+                    if (player.getPlayerState() !== 1) { // start playing
+                        playVid();
+                    } else { // stop playing
+                        pauseVid();
+                    }
+                    listeningTimeLeft = 0; // Naama
+                    omsDetected = 0; // two oms were detected - reset counter and wait for activation again.
+                } else {
+                    // Listens for circles:
+                    recordWristMovement(pose);
+                    detectCircleAndRespond();
+                    updateWristCoords(pose);
+                    listeningTimeLeft--;
                 }
-            } else {
-                // Listens for circles:
-                recordWristMovement(pose);
-                detectCircleAndRespond();
-                updateWristCoords(pose);
+            } else { // End of listening time.
+                omsDetected = 0;
+                console.log(detectedDirections);
+                detectedDirections = "";
+                counter = 0; // Naama
             }
-            listeningTimeLeft--;
-        } else { // End of listening time.
-            omsDetected = 0;
-            listeningTimeLeft = LISTENING_TIME;
-            console.log(detectedDirections);
-            detectedDirections = "";
         }
     }
 }
