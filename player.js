@@ -15,8 +15,10 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 let player;
 function onYouTubeIframeAPIReady() {
     player = new YT.Player('player', {
-        height: '390',
-        width: '640',
+        // height: '390',
+        // width: '640',
+        height: '0',
+        width: '0',
         videoId: 'ZZb_ZtjVxUQ',
         events: {}
     });
@@ -163,11 +165,6 @@ let countdown = 0;
 let listeningTimeLeft = 0;
 let omsDetected = 0;
 let lastRightWristY;
-let lastLeftWristY;
-let detectedDirections = "";         // A string contains the wrist movements detected in the listening period.
-// let rightCircleRegex = ;
-// let leftCircleRegex = ;
-
 
 //---------------FUNCTIONS
 /**
@@ -248,7 +245,6 @@ function detectOm(pose) {
             countdown = SLEEP_TIME; // Do not detect another pose for the next SLEEP_TIME iterations.
             omsDetected++;
             listeningTimeLeft = LISTENING_TIME;
-            detectedDirections = ""; // Naama
             console.log("detectedOms num: ", omsDetected);
             return true;
         }
@@ -262,7 +258,6 @@ function detectOm(pose) {
  */
 function updateWristCoords(pose) {
     lastRightWristY = pose.keypoints[RIGHT_WRIST].position.y;
-    lastLeftWristY = pose.keypoints[LEFT_WRIST].position.y;
 }
 
 /**
@@ -275,30 +270,18 @@ function recordWristMovement(pose){
             && checkScore(pose, LEFT_EYE, WRIST_THRESH)){
 
             let right_delta = pose.keypoints[RIGHT_WRIST].position.y - lastRightWristY;
-            let left_delta = pose.keypoints[LEFT_WRIST].position.y - lastLeftWristY;
-            console.log(right_delta);
-            console.log(left_delta);
             let eyes_dist = euclidDist(pose, LEFT_EYE, RIGHT_EYE);
 
-            if (Math.abs(right_delta) > 4 * Math.abs(left_delta)) {
                 if (right_delta <= -eyes_dist) {
-                    detectedDirections += UP;
-                    // if (detectedDirections.includes(UP)){
-                        raiseVolume();
-                        console.log("increase volume");
-                        console.log("volume: ", player.getVolume());
-                        detectedDirections = "";
-                    // }
+                    raiseVolume();
+                    console.log("increase volume");
+                    console.log("volume: ", player.getVolume());
                 }
-            } else if (Math.abs(left_delta) > 4 * Math.abs(right_delta)){
-                if(left_delta >= eyes_dist) {
-                    detectedDirections += DOWN;
-                    // if (detectedDirections.includes(DOWN)){
+                else if(right_delta >= eyes_dist) {
                         decreaseVolume();
                         console.log("decrease volume");
                         console.log("volume: ", player.getVolume());
-                        detectedDirections = "";
-                    // }
+
                 }
             }
 
@@ -326,19 +309,8 @@ function recordWristMovement(pose){
             //             }
             //         }
             //     }
-        }
 }
 
-/**
- * Searches for a right circle in detectedDirections.
- * If a right / left circle was found, it calls the corresponding functions.
- */
-function detectCircleAndRespond(){
-    //if right circle:
-    //  detectedDirections = "", raise volume.
-    //if left circle:
-    // detectedDirections = "", decrease volume
-}
 
 /**
  * This function inspects the current pose and checks if its a spacial pose.
@@ -378,7 +350,7 @@ function poseDetection() {
                     } else { // stop playing
                         pauseVid();
                     }
-                    listeningTimeLeft = 0; // Naama
+                    listeningTimeLeft = 0;
                     omsDetected = 0; // two oms were detected - reset counter and wait for activation again.
                 } else if (player.getPlayerState() === 1){
                     // Listens for circles:
@@ -389,48 +361,8 @@ function poseDetection() {
                 }
             } else { // End of listening time.
                 omsDetected = 0;
-                console.log(detectedDirections);
-                detectedDirections = "";
-                counter = 0; // Naama
+                counter = 0;
             }
         }
     }
 }
-
-// Circle Detection:
-//     } else {
-//         // detect circle
-//         x_delta = pose.keypoints[RIGHT_WRIST].position.x - lastWristX;
-//         y_delta = pose.keypoints[RIGHT_WRIST].position.y - lastWristY;
-//         if (Math.abs(x_delta) > Math.abs(y_delta)) { // left-right movement
-//             if (x_delta > 0) { //left
-//                 if (detectedDirections[detectedDirections.length - 1] !== 'l') {
-//                     detectedDirections.push('l');
-//                 }
-//             } else { //right
-//                 if (detectedDirections[detectedDirections.length - 1] !== 'r') {
-//                     detectedDirections.push('r');
-//                 }
-//             }
-//         } else { // up-down movement
-//             if (y_delta > 0) { // down
-//                 if (detectedDirections[detectedDirections.length - 1] !== 'd') {
-//                     detectedDirections.push('d');
-//                 }
-//             } else { // up
-//                 if (detectedDirections[detectedDirections.length - 1] !== 'u') {
-//                     detectedDirections.push('u');
-//                 }
-//             }
-//         }
-//     }
-//     listeningTimeLeft -= 1;
-// }
-// if (listeningTimeLeft === 0) { // end of listening period
-//     // todo - check regex to see if there is a circle
-//     omsDetected = 0;
-// }
-
-// // update last coordinates:
-// lastWristX = pose.keypoints[right_wrist].position.x;
-// lastWristY = pose.keypoints[right_wrist].position.y;
