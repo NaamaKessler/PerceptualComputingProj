@@ -240,6 +240,8 @@ function wristsInwards(pose){
  * @param pose
  * @returns {boolean}
  */
+
+
 function detectOm(pose) {
     let eyes_dist = euclidDist(pose, LEFT_EYE, RIGHT_EYE);
     if(elbowsAligned(pose, eyes_dist) && closeWrists(pose, 1.9*eyes_dist) && wristsInwards(pose)){
