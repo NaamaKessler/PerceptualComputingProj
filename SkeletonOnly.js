@@ -1,5 +1,7 @@
 // TASKS:
 // TODO: Why some of the poses are invalid?
+//TESTS
+let bar1 = new ldBar("#myItem1");
 
 //----------------------INIT YOUTUBE---------------------------//
 
@@ -199,9 +201,9 @@ const ELBOW_THRESH = 0.2;
 const EYE_THREASH = 0.2;
 
 // Pose sensitivity:
-const SLEEP_TIME = 60;       // Determines the number of poses we consider as "junk" after a spacial pose was detected.
-const OM_SENSITIVITY = 5;   // Determines how many Oms in a row we consider as a true Om (not noise)
-const LISTENING_TIME = 170; // Determines for how many iterations we listen to the user's commands after activation.
+const SLEEP_TIME = 70;       // Determines the number of poses we consider as "junk" after a spacial pose was detected.
+const OM_SENSITIVITY = 3;   // Determines how many Oms in a row we consider as a true Om (not noise)
+const LISTENING_TIME = 130; // Determines for how many iterations we listen to the user's commands after activation.
 
 // Player's states
 const PLAYING = 1;
@@ -295,6 +297,7 @@ function detectOm(pose) {
             countdown = SLEEP_TIME; // Do not detect another pose for the next SLEEP_TIME iterations.
             omsDetected++;
             listeningTimeLeft = LISTENING_TIME;
+            bar1.set(100);
             // console.log("detectedOms num: ", omsDetected);
             return true;
         }
@@ -322,12 +325,12 @@ function recordWristMovement(pose){
         let y_delta = pose.keypoints[RIGHT_WRIST].position.y - lastWristY;
         let eyes_dist = euclidDist(pose, LEFT_EYE, RIGHT_EYE);
 
-        if (y_delta >= 0.5*eyes_dist) {
+        if (y_delta >= 0.3*eyes_dist) {
             decreaseVolume();
             console.log("decrease volume");
             console.log("volume: ", player.getVolume());
         }
-        else if(y_delta <= -0.5*eyes_dist) {
+        else if(y_delta <= -0.3*eyes_dist) {
             raiseVolume();
             console.log("raise volume");
             console.log("volume: ", player.getVolume());
@@ -374,12 +377,14 @@ function poseDetection() {
                         pauseVid();
                     }
                     listeningTimeLeft = 0;
+                    bar1.set(0);
                     omsDetected = 0; // two oms were detected - reset counter and wait for activation again.
                 } else if (player.getPlayerState() === PLAYING){
                     // Listens for circles:
                     recordWristMovement(pose);
                     updateWristCoords(pose);
                     listeningTimeLeft--;
+                    bar1.set((listeningTimeLeft/LISTENING_TIME)*100);
                 }
             } else { // End of listening time.
                 omsDetected = 0;
