@@ -1,0 +1,62 @@
+
+header {
+    background-color: #2f2f2f;
+}
+
+html, body, .viewport {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+}
+
+#mainWindow {
+    display: flex;
+    flex-direction: row;
+    background-color: #4f86a1;
+    height: 100%;
+    flex-wrap:wrap
+
+}
+
+#userGuidance {
+    display: flex;
+    flex-direction: column;
+    background-color: #060606;
+    flex: 20%;
+
+}
+
+#player {
+    display: flex;
+    flex-direction: column-reverse;
+    background-color: #111111;
+    flex: 80%;
+    min-height: 100%;
+
+}
+
+#playerMainDisplay {
+
+    text-align: center;
+    color: white;
+    font-size: x-large;
+    font-family: Arial;
+}
+
+#playerButtons {
+    background-color: #1a1a1a;
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: center;
+    /*justify-content: space-around;*/
+    align-items: center;
+    height: 15%;
+
+}
+
+.buttons {
+    margin: 1px 30px;
+}
+
+
+
