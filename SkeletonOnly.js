@@ -1,8 +1,19 @@
-// TASKS:
-// TODO: Why some of the poses are invalid?
-//TESTS
-let bar1 = new ldBar("#myItem1");
+//-----------------------HTML related------------------------//
+let ListeningBar = new ldBar("#myItem1");
+let musicBar = new ldBar("#musicBar");
 
+function hideImage(id) {
+    let img = document.getElementById(id);
+    img.style.visibility = 'hidden';
+}
+
+function showImage(id) {
+    let img = document.getElementById(id);
+    img.style.visibility = 'visible';
+}
+
+hideImage("downArrow");
+hideImage("upArrow");
 //----------------------INIT YOUTUBE---------------------------//
 
 // This code loads the IFrame Player API code asynchronously.
@@ -17,10 +28,10 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 let player;
 function onYouTubeIframeAPIReady() {
     player = new YT.Player('player', {
-        // height: '390',
-        // width: '640',
-        height: '0',
-        width: '0',
+        height: '390',
+        width: '640',
+        // height: '0',
+        // width: '0',
         videoId: 'ZZb_ZtjVxUQ',
         events: {}
     });
@@ -90,6 +101,7 @@ let prevPose;
 function draw() {
     image(video, 0, 0, WIDTH, HIGHT);
     background(48, 47, 43);
+    musicBar.set((player.getCurrentTime()/player.getDuration()) * 100);
     drawKeypoints();
     poseDetection();
 }
@@ -204,6 +216,8 @@ const EYE_THREASH = 0.2;
 const SLEEP_TIME = 70;       // Determines the number of poses we consider as "junk" after a spacial pose was detected.
 const OM_SENSITIVITY = 3;   // Determines how many Oms in a row we consider as a true Om (not noise)
 const LISTENING_TIME = 130; // Determines for how many iterations we listen to the user's commands after activation.
+const DOWNS_SENSITIVITY = 5;
+const UPS_SENSITIVITY = 5;
 
 // Player's states
 const PLAYING = 1;
@@ -214,6 +228,9 @@ let counter = 0;
 let countdown = 0;
 let listeningTimeLeft = 0;
 let omsDetected = 0;
+let upsDetected = 0;
+let downsDetected = 0;
+let movementDetected = 0;  // If an up or down movement was already detected in this listening period, the value is 1.
 let lastWristX;
 let lastWristY;
 
@@ -297,7 +314,7 @@ function detectOm(pose) {
             countdown = SLEEP_TIME; // Do not detect another pose for the next SLEEP_TIME iterations.
             omsDetected++;
             listeningTimeLeft = LISTENING_TIME;
-            bar1.set(100);
+            ListeningBar.set(100);
             // console.log("detectedOms num: ", omsDetected);
             return true;
         }
@@ -326,12 +343,29 @@ function recordWristMovement(pose){
         let eyes_dist = euclidDist(pose, LEFT_EYE, RIGHT_EYE);
 
         if (y_delta >= 0.3*eyes_dist) {
+            if(downsDetected >= DOWNS_SENSITIVITY && movementDetected === 0){
+                showImage("downArrow");
+                downsDetected = 0;
+                movementDetected = 1;
+            } else {
+                downsDetected ++;
+            }
             decreaseVolume();
+            console.log(movementDetected);
             console.log("decrease volume");
             console.log("volume: ", player.getVolume());
         }
         else if(y_delta <= -0.3*eyes_dist) {
+            if(upsDetected >= UPS_SENSITIVITY && movementDetected === 0){
+                showImage("upArrow");
+                upsDetected = 0;
+                movementDetected = 1;
+            } else {
+                upsDetected ++;
+            }
             raiseVolume();
+            console.log("ups detected: " + upsDetected);
+            console.log(movementDetected);
             console.log("raise volume");
             console.log("volume: ", player.getVolume());
 
@@ -377,17 +411,27 @@ function poseDetection() {
                         pauseVid();
                     }
                     listeningTimeLeft = 0;
-                    bar1.set(0);
+                    ListeningBar.set(0);
+                    hideImage("downArrow"); // TODO: TO test a little bit more!
+                    upsDetected = 0;
+                    hideImage("upArrow");
+                    counter = 0;
+                    movementDetected = 0;
                     omsDetected = 0; // two oms were detected - reset counter and wait for activation again.
                 } else if (player.getPlayerState() === PLAYING){
                     // Listens for circles:
                     recordWristMovement(pose);
                     updateWristCoords(pose);
                     listeningTimeLeft--;
-                    bar1.set((listeningTimeLeft/LISTENING_TIME)*100);
+                    ListeningBar.set((listeningTimeLeft/LISTENING_TIME)*100);
                 }
             } else { // End of listening time.
                 omsDetected = 0;
+                downsDetected = 0;
+                hideImage("downArrow");
+                upsDetected = 0;
+                hideImage("upArrow");
+                movementDetected = 0;
                 counter = 0;
             }
         }
