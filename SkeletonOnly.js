@@ -32,7 +32,7 @@ function onYouTubeIframeAPIReady() {
         width: '640',
         // height: '0',
         // width: '0',
-        videoId: 'ZZb_ZtjVxUQ',
+        videoId: 'gMRjX-yicN4',
         events: {}
     });
 }
@@ -214,10 +214,10 @@ const EYE_THREASH = 0.2;
 
 // Pose sensitivity:
 const SLEEP_TIME = 70;       // Determines the number of poses we consider as "junk" after a spacial pose was detected.
-const OM_SENSITIVITY = 3;   // Determines how many Oms in a row we consider as a true Om (not noise)
-const LISTENING_TIME = 130; // Determines for how many iterations we listen to the user's commands after activation.
-const DOWNS_SENSITIVITY = 5;
-const UPS_SENSITIVITY = 5;
+const OM_SENSITIVITY = 10;   // Determines how many Oms in a row we consider as a true Om (not noise)
+const LISTENING_TIME = 250; // Determines for how many iterations we listen to the user's commands after activation.
+const DOWNS_SENSITIVITY = 3;
+const UPS_SENSITIVITY = 3;
 
 // Player's states
 const PLAYING = 1;
@@ -230,7 +230,7 @@ let listeningTimeLeft = 0;
 let omsDetected = 0;
 let upsDetected = 0;
 let downsDetected = 0;
-let movementDetected = 0;  // If an up or down movement was already detected in this listening period, the value is 1.
+// let movementDetected = 0;  // If an up or down movement was already detected in this listening period, the value is 1.
 let lastWristX;
 let lastWristY;
 
@@ -343,29 +343,27 @@ function recordWristMovement(pose){
         let eyes_dist = euclidDist(pose, LEFT_EYE, RIGHT_EYE);
 
         if (y_delta >= 0.3*eyes_dist) {
-            if(downsDetected >= DOWNS_SENSITIVITY && movementDetected === 0){
+            if(downsDetected >= DOWNS_SENSITIVITY){
+                hideImage("upArrow");
                 showImage("downArrow");
                 downsDetected = 0;
-                movementDetected = 1;
             } else {
                 downsDetected ++;
             }
             decreaseVolume();
-            console.log(movementDetected);
             console.log("decrease volume");
             console.log("volume: ", player.getVolume());
         }
         else if(y_delta <= -0.3*eyes_dist) {
-            if(upsDetected >= UPS_SENSITIVITY && movementDetected === 0){
+            if(upsDetected >= UPS_SENSITIVITY){
+                hideImage("downArrow");
                 showImage("upArrow");
                 upsDetected = 0;
-                movementDetected = 1;
             } else {
                 upsDetected ++;
             }
             raiseVolume();
             console.log("ups detected: " + upsDetected);
-            console.log(movementDetected);
             console.log("raise volume");
             console.log("volume: ", player.getVolume());
 
@@ -416,7 +414,6 @@ function poseDetection() {
                     upsDetected = 0;
                     hideImage("upArrow");
                     counter = 0;
-                    movementDetected = 0;
                     omsDetected = 0; // two oms were detected - reset counter and wait for activation again.
                 } else if (player.getPlayerState() === PLAYING){
                     // Listens for circles:
@@ -431,7 +428,6 @@ function poseDetection() {
                 hideImage("downArrow");
                 upsDetected = 0;
                 hideImage("upArrow");
-                movementDetected = 0;
                 counter = 0;
             }
         }
