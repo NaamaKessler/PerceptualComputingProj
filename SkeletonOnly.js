@@ -1,8 +1,19 @@
-// TASKS:
-// TODO: Why some of the poses are invalid?
-//TESTS
-let bar1 = new ldBar("#myItem1");
+//-----------------------HTML related------------------------//
+let ListeningBar = new ldBar("#myItem1");
+let musicBar = new ldBar("#musicBar");
 
+function hideImage(id) {
+    let img = document.getElementById(id);
+    img.style.visibility = 'hidden';
+}
+
+function showImage(id) {
+    let img = document.getElementById(id);
+    img.style.visibility = 'visible';
+}
+
+hideImage("downArrow");
+hideImage("upArrow");
 //----------------------INIT YOUTUBE---------------------------//
 
 // This code loads the IFrame Player API code asynchronously.
@@ -17,11 +28,11 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 let player;
 function onYouTubeIframeAPIReady() {
     player = new YT.Player('player', {
-        // height: '390',
-        // width: '640',
-        height: '0',
-        width: '0',
-        videoId: 'ZZb_ZtjVxUQ',
+        height: '390',
+        width: '640',
+        // height: '0',
+        // width: '0',
+        videoId: 'gMRjX-yicN4',
         events: {}
     });
 }
@@ -92,6 +103,7 @@ let prevPose;
 function draw() {
     image(video, 0, 0, WIDTH, HIGHT);
     background(24,23,23);
+    musicBar.set((player.getCurrentTime()/player.getDuration()) * 100);
     drawKeypoints();
     poseDetection();
 }
@@ -209,6 +221,8 @@ const EYE_THREASH = 0.2;
 const SLEEP_TIME = 50;       // Determines the number of poses we consider as "junk" after a spacial pose was detected.
 const OM_SENSITIVITY = 3;   // Determines how many Oms in a row we consider as a true Om (not noise)
 const LISTENING_TIME = 180; // Determines for how many iterations we listen to the user's commands after activation.
+const DOWNS_SENSITIVITY = 3;
+const UPS_SENSITIVITY = 3;
 
 // Player's states
 const PLAYING = 1;
@@ -219,8 +233,11 @@ let counter = 0;
 let countdown = 0;
 let listeningTimeLeft = 0;
 let omsDetected = 0;
+let upsDetected = 0;
+let downsDetected = 0;
 let lastWristX = -1;
 let lastWristY = -1;
+
 
 //---------------FUNCTIONS
 /**
@@ -333,12 +350,27 @@ function recordWristMovement(pose){
         let eyes_dist = euclidDist(pose, LEFT_EYE, RIGHT_EYE);
 
         if (y_delta >= 0.3*eyes_dist) {
+            if(downsDetected >= DOWNS_SENSITIVITY){
+                hideImage("upArrow");
+                showImage("downArrow");
+                downsDetected = 0;
+            } else {
+                downsDetected ++;
+            }
             decreaseVolume();
             console.log("decrease volume");
             console.log("volume: ", player.getVolume());
         }
         else if(y_delta <= -0.3*eyes_dist) {
+            if(upsDetected >= UPS_SENSITIVITY){
+                hideImage("downArrow");
+                showImage("upArrow");
+                upsDetected = 0;
+            } else {
+                upsDetected ++;
+            }
             raiseVolume();
+            console.log("ups detected: " + upsDetected);
             console.log("raise volume");
             console.log("volume: ", player.getVolume());
 
@@ -391,6 +423,12 @@ function poseDetection() {
                         document.getElementById("playerStateIndicator").innerHTML = "Paused";
                     }
                     listeningTimeLeft = 0;
+                    ListeningBar.set(0);
+                    hideImage("downArrow"); 
+                    downsDetected = 0;
+                    hideImage("upArrow");
+                    upsDetected = 0;
+                    counter = 0;
                     omsDetected = 0; // two oms were detected - reset counter and wait for activation again.
                 } else if (player.getPlayerState() === PLAYING){
                     // Listens for circles:
@@ -399,6 +437,7 @@ function poseDetection() {
                     }
                     updateWristCoords(pose);
                     listeningTimeLeft--;
+
                 } else {
                     lastWristX = -1;
                     lastWristY = -1;
@@ -406,6 +445,10 @@ function poseDetection() {
                 }
             } else { // End of listening time.
                 omsDetected = 0;
+                downsDetected = 0;
+                hideImage("downArrow");
+                upsDetected = 0;
+                hideImage("upArrow");
                 counter = 0;
                 if (player.getPlayerState() !== PLAYING) {
                     document.getElementById("playerStateIndicator").innerHTML = "Paused";
