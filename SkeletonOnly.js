@@ -1,6 +1,6 @@
 //-----------------------HTML related------------------------//
-let ListeningBar = new ldBar("#myItem1");
-let musicBar = new ldBar("#musicBar");
+let listeningBar = new ldBar("#myItem1");
+// let musicBar = new ldBar("#musicBar");
 
 function hideImage(id) {
     let img = document.getElementById(id);
@@ -28,11 +28,11 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 let player;
 function onYouTubeIframeAPIReady() {
     player = new YT.Player('player', {
-        height: '390',
-        width: '640',
-        // height: '0',
-        // width: '0',
-        videoId: 'gMRjX-yicN4',
+        // height: '390',
+        // width: '640',
+        height: '0',
+        width: '0',
+        videoId: 's3Q80mk7bxE',
         events: {}
     });
 }
@@ -103,7 +103,7 @@ let prevPose;
 function draw() {
     image(video, 0, 0, WIDTH, HIGHT);
     background(24,23,23);
-    musicBar.set((player.getCurrentTime()/player.getDuration()) * 100);
+    // musicBar.set((player.getCurrentTime()/player.getDuration()) * 100);
     drawKeypoints();
     poseDetection();
 }
@@ -218,11 +218,11 @@ const ELBOW_THRESH = 0.2;
 const EYE_THREASH = 0.2;
 
 // Pose sensitivity:
-const SLEEP_TIME = 50;       // Determines the number of poses we consider as "junk" after a spacial pose was detected.
-const OM_SENSITIVITY = 3;   // Determines how many Oms in a row we consider as a true Om (not noise)
-const LISTENING_TIME = 180; // Determines for how many iterations we listen to the user's commands after activation.
-const DOWNS_SENSITIVITY = 3;
-const UPS_SENSITIVITY = 3;
+const SLEEP_TIME = 70;       // Determines the number of poses we consider as "junk" after a spacial pose was detected.
+const OM_SENSITIVITY = 10;   // Determines how many Oms in a row we consider as a true Om (not noise)
+const LISTENING_TIME = 250; // Determines for how many iterations we listen to the user's commands after activation.
+const DOWNS_SENSITIVITY = 4;
+const UPS_SENSITIVITY = 4;
 
 // Player's states
 const PLAYING = 1;
@@ -394,11 +394,11 @@ function poseDetection() {
         // If we just detected a pose, the current pose is probably trash, so move on:
         if (countdown > 0) {
             countdown--;
-            bar1.set((1 - countdown/SLEEP_TIME)*100);
+            listeningBar.set((1 - countdown/SLEEP_TIME)*100);
             console.log("delaying");
             return;
         }
-        bar1.set(0);
+        listeningBar.set(0);
 
         // Waits for activation:
         if (omsDetected === 0) {
@@ -423,8 +423,7 @@ function poseDetection() {
                         document.getElementById("playerStateIndicator").innerHTML = "Paused";
                     }
                     listeningTimeLeft = 0;
-                    ListeningBar.set(0);
-                    hideImage("downArrow"); 
+                    hideImage("downArrow");
                     downsDetected = 0;
                     hideImage("upArrow");
                     upsDetected = 0;
