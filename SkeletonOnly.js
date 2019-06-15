@@ -188,12 +188,20 @@ function drawKeypoints()  {
 
 let countdownState = 3;
 
-function pauseVid() {
-    player.pauseVideo();
-}
-
-function playVid() {
-    player.playVideo();
+/**
+ * Called when the play-pause button is clicked.
+ */
+function playPauseVid(){
+    let buttonId = document.getElementById("playPause");
+    if(player.getPlayerState() === PLAYING){
+        player.pauseVideo();
+        document.getElementById("playerStateIndicator").innerHTML = "Paused";
+        buttonId.src = "icons\\play-button.png"
+    } else {
+        player.playVideo();
+        document.getElementById("playerStateIndicator").innerHTML = "Playing";
+        buttonId.src = "icons\\pause.png"
+    }
 }
 
 function raiseVolume() {
@@ -415,13 +423,7 @@ function poseDetection() {
                 console.log("listening");
                 if (detectOm(pose)) {
                     console.log("detected Om while listening.");
-                    if (player.getPlayerState() !== PLAYING) { // start playing
-                        playVid();
-                        document.getElementById("playerStateIndicator").innerHTML = "Playing";
-                    } else { // stop playing
-                        pauseVid();
-                        document.getElementById("playerStateIndicator").innerHTML = "Paused";
-                    }
+                    playPauseVid();
                     listeningTimeLeft = 0;
                     hideImage("downArrow");
                     downsDetected = 0;
