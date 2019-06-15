@@ -13,17 +13,16 @@ html, body, .viewport {
 #mainWindow {
     display: flex;
     flex-direction: row;
-    /*background-color: #4f86a1;*/
     height: 100%;
-    flex-wrap:wrap
-
+    width: 100%;
+    flex: 1;
 }
 
 #userGuidance {
     display: flex;
     flex-direction: column;
     background-color: #181717;
-    flex: 20%;
+    width: 20%;
     min-height: 100%;
 }
 
@@ -44,16 +43,14 @@ html, body, .viewport {
 }
 
 
-
 #playerWindow {
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: column;
+    justify-content: space-between;
     background-color: #202020;
-    flex: 80%;
+    width: 80%;
     min-height: 100%;
-
 }
-
 
 #playerMainDisplay {
     text-align: center;
@@ -62,14 +59,19 @@ html, body, .viewport {
     font-family: calibri;
 }
 
+#bottom {
+    display: flex;
+    flex-flow: column;
+    justify-content: flex-end;
+}
+
 #playerButtons {
     background-color: #363636;
     display: flex;
     flex-flow: row wrap;
     justify-content: center;
-    /*justify-content: space-around;*/
     align-items: center;
-    height: 15%;
+    padding: 5px 0px 22px 0px;
 
 }
 
