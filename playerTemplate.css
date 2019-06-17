@@ -75,6 +75,16 @@ html, body, .viewport {
 
 }
 
+#playerSongProgressBar{
+    color: #F4F3BE;
+    display: flex;
+    font-family: calibri;
+    font-size: 20px;
+    margin:auto;
+    justify-content: center;
+}
+
+
 .buttons {
     margin: 1px 30px;
 }
