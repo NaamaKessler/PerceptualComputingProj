@@ -4,6 +4,28 @@ let musicBar = new ldBar("#musicBar");
 let images = ["images/dogDancing.PNG", "images/catDance.PNG"]; //(Noy) When replacing songs, we can do this: https://stackoverflow.com/questions/11722400/programmatically-change-the-src-of-an-img-tag  with the id "songPic"
 let names = ["I Want You Back - Jackson 5", "some other song"]; //(Noy) We can do the same with getElementId.innerText (https://stackoverflow.com/questions/8550251/how-do-i-replace-change-the-heading-text-inside-h3-h3-using-jquery)
 
+// Get the modal
+let modal = document.getElementById("myModal");
+
+// Get the image and insert it inside the modal - use its "alt" text as a caption
+let guideButton = document.getElementById("guideButton");
+let modalImg = document.getElementById("img01");
+let captionText = document.getElementById("caption");
+guideButton.onclick = function(){
+    modal.style.display = "block";
+    // modalImg.src = this.src;
+    // captionText.innerHTML = this.alt;
+};
+
+// Get the <span> element that closes the modal
+let span = document.getElementsByClassName("close")[0];
+
+// When the user clicks on <span> (x), close the modal
+span.onclick = function() {
+    modal.style.display = "none";
+};
+
+
 function hideImage(id) {
     let img = document.getElementById(id);
     img.style.visibility = 'hidden';
@@ -78,7 +100,7 @@ let WIDTH = 400;
 function setup() {
     var canvas = createCanvas(WIDTH, HIGHT);
     canvas.background(6, 6, 6);
-    canvas.parent('userGuidance');
+    canvas.parent('skeleton');
     video = createCapture(VIDEO);
     video.size(WIDTH, HIGHT);
 
