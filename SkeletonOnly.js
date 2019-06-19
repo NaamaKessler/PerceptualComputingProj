@@ -1,6 +1,30 @@
 //-----------------------HTML related------------------------//
 let listeningBar = new ldBar("#myItem1");
 let musicBar = new ldBar("#musicBar");
+let images = ["images/dogDancing.PNG", "images/catDance.PNG"]; //(Noy) When replacing songs, we can do this: https://stackoverflow.com/questions/11722400/programmatically-change-the-src-of-an-img-tag  with the id "songPic"
+let names = ["I Want You Back - Jackson 5", "some other song"]; //(Noy) We can do the same with getElementId.innerText (https://stackoverflow.com/questions/8550251/how-do-i-replace-change-the-heading-text-inside-h3-h3-using-jquery)
+
+// Get the modal
+let modal = document.getElementById("myModal");
+
+// Get the image and insert it inside the modal - use its "alt" text as a caption
+let guideButton = document.getElementById("guideButton");
+let modalImg = document.getElementById("img01");
+let captionText = document.getElementById("caption");
+guideButton.onclick = function(){
+    modal.style.display = "block";
+    // modalImg.src = this.src;
+    // captionText.innerHTML = this.alt;
+};
+
+// Get the <span> element that closes the modal
+let span = document.getElementsByClassName("close")[0];
+
+// When the user clicks on <span> (x), close the modal
+span.onclick = function() {
+    modal.style.display = "none";
+};
+
 
 function hideImage(id) {
     let img = document.getElementById(id);
@@ -76,7 +100,7 @@ let WIDTH = 400;
 function setup() {
     var canvas = createCanvas(WIDTH, HIGHT);
     canvas.background(6, 6, 6);
-    canvas.parent('userGuidance');
+    canvas.parent('skeleton');
     video = createCapture(VIDEO);
     video.size(WIDTH, HIGHT);
 
@@ -219,12 +243,12 @@ function playPauseVid(){
     let buttonId = document.getElementById("playPause");
     if(player.getPlayerState() === PLAYING){
         player.pauseVideo();
-        console.log("paused!");
+        // console.log("paused!");
         document.getElementById("playerStateIndicator").innerHTML = "Paused";
         buttonId.src = "icons\\play-button.png"
     } else {
         player.playVideo();
-        console.log("playing!");
+        // console.log("playing!");
         document.getElementById("playerStateIndicator").innerHTML = "Playing";
         buttonId.src = "icons\\pause.png"
     }
@@ -392,8 +416,8 @@ function recordWristMovement(pose){
                 downsDetected ++;
             }
             decreaseVolume();
-            console.log("decrease volume");
-            console.log("volume: ", player.getVolume());
+            // console.log("decrease volume");
+            // console.log("volume: ", player.getVolume());
         }
         else if(y_delta <= -0.3*eyes_dist) {
             if(upsDetected >= UPS_SENSITIVITY){
@@ -404,9 +428,9 @@ function recordWristMovement(pose){
                 upsDetected ++;
             }
             raiseVolume();
-            console.log("ups detected: " + upsDetected);
-            console.log("raise volume");
-            console.log("volume: ", player.getVolume());
+            // console.log("ups detected: " + upsDetected);
+            // console.log("raise volume");
+            // console.log("volume: ", player.getVolume());
 
         }
     }
@@ -429,14 +453,14 @@ function poseDetection() {
         if (countdown > 0) {
             countdown--;
             listeningBar.set((1 - countdown/SLEEP_TIME)*100);
-            console.log("delaying");
+            // console.log("delaying");
             return;
         }
         listeningBar.set(0);
 
         // Waits for activation:
         if (omsDetected === 0) {
-            console.log("Waits for activation");
+            // console.log("Waits for activation");
             detectOm(pose);
             // updateWristCoords(pose); // removed for better recognition (14.06)
         }
@@ -446,9 +470,9 @@ function poseDetection() {
             document.getElementById("playerStateIndicator").style.color = "#F7DFA3";
             // After activated, listens for the next command:
             if (listeningTimeLeft > 0) {
-                console.log("listening");
+                // console.log("listening");
                 if (detectOm(pose)) {
-                    console.log("detected Om while listening.");
+                    // console.log("detected Om while listening.");
                     playPauseVid();
                     listeningTimeLeft = 0;
                     hideImage("downArrow");

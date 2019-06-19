@@ -41,21 +41,38 @@
             </div>
 
             <div id="skeleton"> <!-- PoseNet skeleton -->
-<!--                <script type="text/javascript" src=SkeletonOnly.js></script>-->
                 <div id = "root">
                     <div id="player"></div>
                     <p id='status'></p>
                 </div>
             </div>
+
+            <!-- quick guide link  -->
+            <div id = "guideModal">
+                <input id = "guideButton" class="buttons" type="image" src="icons\info32.png"/>
+<!--                <button id = "guideButton">Guide</button>-->
+                <!-- The Modal -->
+                <div id="myModal" class="modal">
+
+                    <!-- The Close Button -->
+                    <span class="close">&times;</span>
+
+                    <!-- Modal Content (The Image) -->
+                    <img id="myImg" class= "modal-content" src="images/GuideInProgress.png" alt="">
+                    <!-- Modal Caption (Image Text) -->
+
+                    <div id="caption"></div>
+                </div>
+            </div>
+
         </div>
 
         <!-- right (main) part of screen-->
         <div id="playerWindow">
 
             <div id="playerMainDisplay">
-<!--                Song's name-->
-<!--                singer's name-->
-<!--                album-->
+                <img src="" id = "songPic" height="559" width="559">
+                <h3 id="songName"></h3>
             </div>
 
             <div id="bottom">
@@ -63,7 +80,7 @@
                     <div class="time" id = "currTime">0:00</div>
                     <div class="ldBar label-center"
                          id = "musicBar"
-                         style="width:100%;height:10%;margin:auto; font-size: 0"
+                         style="width:200%;height:10%;margin:auto; font-size: 0"
                          data-value="0"
                          data-preset="line"
                          data-stroke="data:ldbar/res,stripe(#F4F3BE,#F4F3BE,1)"></div>
@@ -71,12 +88,17 @@
                 </div>
 
                 <div id="playerButtons"> <!-- These are the buttons we should wire to the youtube player -->
-                <input class="buttons" type="image" src="icons\back.png" onclick="" />
-                <input class="buttons"  type="image" src="icons\play-button.png" onclick="playPauseVid()" id = "playPause" />
-                <input class="buttons" type="image" src="icons\next.png" onclick="" />
-                <input class="buttons" type="image" src="icons\speaker.png" onclick="" />
-
+                    <div id="playBackForward">
+                        <input class="buttons" type="image" src="icons\back.png" onclick="" />
+                        <input class="buttons"  type="image" src="icons\play-button.png" onclick="playPauseVid()" id = "playPause" />
+                        <input class="buttons" type="image" src="icons\next.png" onclick="" />
+                    </div>
+                    <div id="volumeControl">
+                        <input class="buttons" type="image" src="icons\volume-up32.png" onclick="raiseVolume()" />
+                        <input class="buttons" type="image" src="icons\volume-down32.png" onclick="decreaseVolume()" />
+                    </div>
                 </div>
+
             </div>
         </div>
 
