@@ -109,8 +109,8 @@ function setup() {
 
     // Create a new poseNet method with a single detection
     poseNet = ml5.poseNet(video, {
-        imageScaleFactor: 0.7,
-        outputStride: 16,
+        imageScaleFactor: 0.6,
+        outputStride: 8,
         detectionType: 'single',
     }, modelReady);
     // This sets up an event that fills the global variable "poses"
