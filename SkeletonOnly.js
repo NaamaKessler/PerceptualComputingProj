@@ -70,17 +70,20 @@ tag.src = "https://www.youtube.com/iframe_api";
 let firstScriptTag = document.getElementsByTagName('script')[0];
 firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
+playlistIds = ['s3Q80mk7bxE', 'nqxVMLVe62U', 'HgzGwKwLmgM', 'zO6D_BAuYCI', 'kijpcUv-b8M',
+    'YoDh_gHDvkk', '2ZBtPf7FOoM'];
+currentlyPlayingIdx = 0;
+
 /**
  * This function creates an <iframe> (and YouTube poseDemo) after the API code downloads.
  */
 let player;
 function onYouTubeIframeAPIReady() {
     player = new YT.Player('player', {
-        // height: '390',
-        // width: '640',
         height: '0',
         width: '0',
-        videoId: 's3Q80mk7bxE',
+        videoId: playlistIds[currentlyPlayingIdx],
+        // playerVars: {listType: 'playlist', list: 'RDEMj7ObS6TgJ5zSOH9DUcVq8Q'},
         events: {}
     });
 }
@@ -90,8 +93,8 @@ function onYouTubeIframeAPIReady() {
 let video;
 let poseNet;
 let poses = [];
-let HIGHT = 400;
-let WIDTH = 400;
+let HIGHT = 250;
+let WIDTH = 250;
 
 
 /**
@@ -243,12 +246,12 @@ function playPauseVid(){
     let buttonId = document.getElementById("playPause");
     if(player.getPlayerState() === PLAYING){
         player.pauseVideo();
-        // console.log("paused!");
+        console.log("paused!");
         document.getElementById("playerStateIndicator").innerHTML = "Paused";
         buttonId.src = "icons\\play-button.png"
     } else {
         player.playVideo();
-        // console.log("playing!");
+        console.log("playing!");
         document.getElementById("playerStateIndicator").innerHTML = "Playing";
         buttonId.src = "icons\\pause.png"
     }
@@ -265,6 +268,19 @@ function decreaseVolume() {
     player.setVolume(currVolume);
 }
 
+function nextSong() {
+    currentlyPlayingIdx = (currentlyPlayingIdx + 1) % playlistIds.length;
+    player.loadVideoById(playlistIds[currentlyPlayingIdx]);
+}
+
+function previousSong() {
+    if (currentlyPlayingIdx === 0){
+        currentlyPlayingIdx = playlistIds.length-1;
+    } else {
+        currentlyPlayingIdx --;
+    }
+    player.loadVideoById(playlistIds[currentlyPlayingIdx]);
+}
 
 //----------------------------POSE DETECTION--------------------------------//
 
@@ -453,14 +469,14 @@ function poseDetection() {
         if (countdown > 0) {
             countdown--;
             listeningBar.set((1 - countdown/SLEEP_TIME)*100);
-            // console.log("delaying");
+            console.log("delaying");
             return;
         }
         listeningBar.set(0);
 
         // Waits for activation:
         if (omsDetected === 0) {
-            // console.log("Waits for activation");
+            console.log("Waits for activation");
             detectOm(pose);
             // updateWristCoords(pose); // removed for better recognition (14.06)
         }
