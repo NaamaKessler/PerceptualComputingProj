@@ -46,6 +46,10 @@ tag.src = "https://www.youtube.com/iframe_api";
 let firstScriptTag = document.getElementsByTagName('script')[0];
 firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
+playlistIds = ['s3Q80mk7bxE', 'nqxVMLVe62U', 'HgzGwKwLmgM', 'zO6D_BAuYCI', 'kijpcUv-b8M',
+    'YoDh_gHDvkk', '2ZBtPf7FOoM'];
+currentlyPlayingIdx = 1;
+
 /**
  * This function creates an <iframe> (and YouTube poseDemo) after the API code downloads.
  */
@@ -56,7 +60,8 @@ function onYouTubeIframeAPIReady() {
         // width: '640',
         height: '0',
         width: '0',
-        videoId: 's3Q80mk7bxE',
+        videoId: playlistIds[currentlyPlayingIdx],
+        // playerVars: {listType: 'playlist', list: 'RDEMj7ObS6TgJ5zSOH9DUcVq8Q'},
         events: {}
     });
 }
@@ -66,8 +71,8 @@ function onYouTubeIframeAPIReady() {
 let video;
 let poseNet;
 let poses = [];
-let HIGHT = 400;
-let WIDTH = 400;
+let HIGHT = 250;
+let WIDTH = 250;
 
 
 /**
@@ -241,6 +246,20 @@ function decreaseVolume() {
     player.setVolume(currVolume);
 }
 
+function nextSong() {
+    // currentlyPlayingIdx = currentlyPlayingIdx + 1;
+    // console.log(currentlyPlayingIdx);
+    // player.videoId = playlistIds[currentlyPlayingIdx];
+    player.nextVideo();
+}
+
+function previousSong() {
+    // window.alert(nextSong());
+    // currentlyPlayingIdx = (currentlyPlayingIdx - 1) % playlistIds.length;
+    // console.log(currentlyPlayingIdx);
+    // player.videoId = playlistIds[currentlyPlayingIdx];
+    player.previousVideo();
+}
 
 //----------------------------POSE DETECTION--------------------------------//
 

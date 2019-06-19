@@ -89,6 +89,10 @@ html, body, .viewport {
     margin: 1px 30px;
 }
 
+#myCanvas {
+    width: 100%;
+}
+
 
 
 
