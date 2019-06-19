@@ -70,7 +70,7 @@ tag.src = "https://www.youtube.com/iframe_api";
 let firstScriptTag = document.getElementsByTagName('script')[0];
 firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-playlistIds = ['s3Q80mk7bxE', 'nqxVMLVe62U', 'HgzGwKwLmgM', 'zO6D_BAuYCI', 'kijpcUv-b8M',
+playlistIds = ['s3Q80mk7bxE', 'nqxVMLVe62U', '0fAQhSRLQnM', 'unfzfe8f9NI', 'kijpcUv-b8M',
     'YoDh_gHDvkk', '2ZBtPf7FOoM'];
 currentlyPlayingIdx = 0;
 
@@ -394,7 +394,7 @@ function detectOm(pose) {
             omsDetected++;
             listeningTimeLeft = LISTENING_TIME;
             if (omsDetected === 1) { // indicates delay
-                document.getElementById("playerStateIndicator").innerHTML = "Just a Sec...";
+                document.getElementById("playerStateIndicator").innerHTML = "Got it! \nJust a Sec...";
                 document.getElementById("playerStateIndicator").style.color = "#F7DFA3";
             }
             return true;
@@ -468,7 +468,9 @@ function poseDetection() {
         // If we just detected a pose, the current pose is probably trash, so move on:
         if (countdown > 0) {
             countdown--;
-            listeningBar.set((1 - countdown/SLEEP_TIME)*100);
+            if (omsDetected !== 0) {
+                listeningBar.set((1 - countdown/SLEEP_TIME)*100);
+            }
             console.log("delaying");
             return;
         }
