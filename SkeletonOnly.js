@@ -93,8 +93,8 @@ function onYouTubeIframeAPIReady() {
 let video;
 let poseNet;
 let poses = [];
-let HIGHT = 250;
-let WIDTH = 250;
+let HIGHT = 350;
+let WIDTH = 350;
 
 
 /**
