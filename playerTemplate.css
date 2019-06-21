@@ -180,6 +180,10 @@ html, body, .viewport {
     margin: 1px 30px;
 }
 
+#guideButton{
+    margin:auto;
+}
+
 #guideModal{
     margin:auto;
 }
