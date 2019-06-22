@@ -152,6 +152,7 @@ const POSE_CONFIDENCE = 0.2;
 
 // Globals
 let prevPose;
+let poseDetected = 0; //for skeleton color change when a pose is detected
 
 /**
  * Draws the skeleton and key points of each pose when detected.
@@ -174,7 +175,11 @@ function keypointsHelper(pose) {
         let keypoint = pose.keypoints[j];
         // Only draw an ellipse is the pose probability is bigger than 0.2
         if (keypoint.score > 0.2) {
-            fill(247, 223, 163);
+            if (poseDetected > 0) {
+                fill(163,247,223);
+            } else {
+                fill(247, 223, 163);
+            }
             noStroke();
             ellipse(keypoint.position.x, keypoint.position.y, 10, 10);
         }
@@ -188,7 +193,12 @@ function keypointsHelper(pose) {
  * @param kp2
  */
 function drawLine(pose, kp1, kp2){
-    stroke(247, 223, 163);
+    if (poseDetected > 0) {
+        stroke(163,247,223);
+    } else {
+        stroke(247, 223, 163);
+    }
+
     line(pose.keypoints[kp1].position.x, pose.keypoints[kp1].position.y,
         pose.keypoints[kp2].position.x, pose.keypoints[kp2].position.y);
 }
@@ -202,6 +212,9 @@ function skeletonHelper(pose) {
     drawLine(pose, RIGHT_SHOLDER, RIGHT_HIP);
     drawLine(pose, LEFT_SHOLDER, LEFT_HIP);
     drawLine(pose, RIGHT_HIP, LEFT_HIP);
+    if (poseDetected > 0){
+        poseDetected --;
+    }
 }
 
 /**
@@ -411,6 +424,7 @@ function detectOm(pose) {
             if (omsDetected === 1) { // indicates delay
                 document.getElementById("playerStateIndicator").innerHTML = "Got it! \nJust a Sec...";
                 document.getElementById("playerStateIndicator").style.color = "#F7DFA3";
+                poseDetected = 10;
             }
             return true;
         }
@@ -447,6 +461,7 @@ function recordWristMovement(pose){
                 downsDetected ++;
             }
             decreaseVolume();
+            poseDetected = 10;
             // console.log("decrease volume");
             // console.log("volume: ", player.getVolume());
         }
@@ -459,6 +474,7 @@ function recordWristMovement(pose){
                 upsDetected ++;
             }
             raiseVolume();
+            poseDetected = 10;
             // console.log("ups detected: " + upsDetected);
             // console.log("raise volume");
             // console.log("volume: ", player.getVolume());
@@ -495,7 +511,6 @@ function poseDetection() {
         if (omsDetected === 0) {
             console.log("Waits for activation");
             detectOm(pose);
-            // updateWristCoords(pose); // removed for better recognition (14.06)
         }
         else {
             // Indicates that the player is listening
@@ -503,9 +518,7 @@ function poseDetection() {
             document.getElementById("playerStateIndicator").style.color = "#F7DFA3";
             // After activated, listens for the next command:
             if (listeningTimeLeft > 0) {
-                // console.log("listening");
                 if (detectOm(pose)) {
-                    // console.log("detected Om while listening.");
                     playPauseVid();
                     listeningTimeLeft = 0;
                     hideImage("downArrow");
@@ -514,6 +527,8 @@ function poseDetection() {
                     upsDetected = 0;
                     counter = 0;
                     omsDetected = 0; // two oms were detected - reset counter and wait for activation again.
+                    poseDetected = 10;
+
                 } else if (player.getPlayerState() === PLAYING){
                     // Listens for circles:
                     if (lastWristX !== -1 && lastWristY !== -1) {
