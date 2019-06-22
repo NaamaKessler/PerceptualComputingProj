@@ -34,6 +34,7 @@ html, body, .viewport {
     align-items: center;
     font-family: calibri;
     font-size: 30px;
+
 }
 
 #listeningPeriodBar {
@@ -60,6 +61,15 @@ html, body, .viewport {
     padding-top:70px;
     font-size: x-large;
     font-family: calibri;
+}
+
+#songDetails {
+    font-size: medium;
+    color: #F7DFA3;
+}
+
+#songName {
+    font-size: large;
 }
 
 #bottom {

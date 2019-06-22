@@ -70,8 +70,13 @@ tag.src = "https://www.youtube.com/iframe_api";
 let firstScriptTag = document.getElementsByTagName('script')[0];
 firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-playlistIds = ['s3Q80mk7bxE', 'nqxVMLVe62U', '0fAQhSRLQnM', 'unfzfe8f9NI', 'kijpcUv-b8M',
-    'YoDh_gHDvkk', '2ZBtPf7FOoM'];
+playlistIds = ['s3Q80mk7bxE', 'nqxVMLVe62U', '0fAQhSRLQnM', 'unfzfe8f9NI'];
+albumsCoverPics = ['album_cover_pics/Diana_Ross_Presents_the_Jackson_5.jpg',
+'album_cover_pics/Jacksons-destiny.jpg', 'album_cover_pics/sultans-front-b.jpg',
+    "album_cover_pics/Mamma_Mia_Intermezzo_No_1.jpg"];
+songsNames = ['I Want You Back', 'Blame it on the Boogie', 'Sultans of Swing', 'Mamma Mia'];
+artistsDetails = ['The Jackson 5', 'The Jackson 5', 'Dire Straits', 'ABBA'];
+albumsNames = ['Diana Ross Presents the Jackson 5', 'Destiny', 'Sultans of Swing', ''];
 currentlyPlayingIdx = 0;
 
 /**
@@ -246,12 +251,12 @@ function playPauseVid(){
     let buttonId = document.getElementById("playPause");
     if(player.getPlayerState() === PLAYING){
         player.pauseVideo();
-        console.log("paused!");
+        // console.log("paused!");
         document.getElementById("playerStateIndicator").innerHTML = "Paused";
         buttonId.src = "icons\\play-button.png"
     } else {
         player.playVideo();
-        console.log("playing!");
+        // console.log("playing!");
         document.getElementById("playerStateIndicator").innerHTML = "Playing";
         buttonId.src = "icons\\pause.png"
     }
@@ -268,9 +273,18 @@ function decreaseVolume() {
     player.setVolume(currVolume);
 }
 
+function changeSongsMetaData() {
+    document.getElementById('albumCover').src = albumsCoverPics[currentlyPlayingIdx];
+    document.getElementById('songName').innerHTML = songsNames[currentlyPlayingIdx];
+    document.getElementById('artistName').innerHTML = artistsDetails[currentlyPlayingIdx];
+    document.getElementById('albumName').innerHTML = albumsNames[currentlyPlayingIdx];
+}
+
 function nextSong() {
     currentlyPlayingIdx = (currentlyPlayingIdx + 1) % playlistIds.length;
     player.loadVideoById(playlistIds[currentlyPlayingIdx]);
+    changeSongsMetaData();
+
 }
 
 function previousSong() {
@@ -280,6 +294,7 @@ function previousSong() {
         currentlyPlayingIdx --;
     }
     player.loadVideoById(playlistIds[currentlyPlayingIdx]);
+    changeSongsMetaData();
 }
 
 //----------------------------POSE DETECTION--------------------------------//
