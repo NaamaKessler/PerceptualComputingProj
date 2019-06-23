@@ -60,8 +60,8 @@ function updatePlayerProgress(){
     }
 }
 
-hideImage("downArrow");
-hideImage("upArrow");
+// hideImage("downArrow");
+// hideImage("upArrow");
 //----------------------INIT YOUTUBE---------------------------//
 
 // This code loads the IFrame Player API code asynchronously.
@@ -561,9 +561,9 @@ function poseDetection() {
                     // console.log("detected Om while listening.");
                     playPauseVid();
                     listeningTimeLeft = 0;
-                    hideImage("downArrow");
+                    // hideImage("downArrow");
                     downsDetected = 0;
-                    hideImage("upArrow");
+                    // hideImage("upArrow");
                     upsDetected = 0;
                     counter = 0;
                     omsDetected = 0; // two oms were detected - reset counter and wait for activation again.
@@ -583,9 +583,9 @@ function poseDetection() {
             } else { // End of listening time.
                 omsDetected = 0;
                 downsDetected = 0;
-                hideImage("downArrow");
+                // hideImage("downArrow");
                 upsDetected = 0;
-                hideImage("upArrow");
+                // hideImage("upArrow");
                 counter = 0;
                 if (player.getPlayerState() !== PLAYING) {
                     document.getElementById("playerStateIndicator").innerHTML = "Paused";
