@@ -60,8 +60,8 @@ function updatePlayerProgress(){
     }
 }
 
-hideImage("downArrow");
-hideImage("upArrow");
+// hideImage("downArrow");
+// hideImage("upArrow");
 //----------------------INIT YOUTUBE---------------------------//
 
 // This code loads the IFrame Player API code asynchronously.
@@ -276,13 +276,13 @@ function playPauseVid(){
 }
 
 function raiseVolume() {
-    const currVolume = player.getVolume() + 5;
+    const currVolume = player.getVolume() + 7;
     player.setVolume(currVolume);
 }
 
 
 function decreaseVolume() {
-    const currVolume = player.getVolume() - 5;
+    const currVolume = player.getVolume() - 7;
     player.setVolume(currVolume);
 }
 
@@ -325,6 +325,7 @@ const OM_SENSITIVITY = 10;   // Determines how many Oms in a row we consider as 
 const LISTENING_TIME = 250; // Determines for how many iterations we listen to the user's commands after activation.
 const DOWNS_SENSITIVITY = 5;
 const UPS_SENSITIVITY = 5;
+const DIRECTION_CONFIDENCE = 7;
 
 // Player's states
 const PLAYING = 1;
@@ -339,6 +340,7 @@ let upsDetected = 0;
 let downsDetected = 0;
 let lastWristX = -1;
 let lastWristY = -1;
+let weristMovements = [];   // Records the wrist movements(deltas) for the last DIRECTION_CONFIDENCE iterations.
 
 
 //---------------FUNCTIONS
@@ -441,6 +443,71 @@ function updateWristCoords(pose) {
     lastWristY = pose.keypoints[RIGHT_WRIST].position.y;
 }
 
+function calcMedian(values){
+    if(values.length ===0) return 0;
+
+    values.sort(function(a,b){
+        return a-b;
+    });
+
+    let half = Math.floor(values.length / 2);
+
+    if (values.length % 2)
+        return values[half];
+
+    return (values[half - 1] + values[half]) / 2.0;
+}
+
+function calcAvg(values){
+    let total = 0;
+    for(let i = 0; i < values.length; i++) {
+        total += values[i];
+    }
+    return  total / values.length;
+}
+
+
+// /**
+//  * Records the wrist movements of the user and keeps them in the global array detectedDirections[].
+//  * @param pose
+//  */
+// function recordWristMovement(pose){
+//     if(checkScore(pose, RIGHT_WRIST, WRIST_THRESH) && checkScore(pose, RIGHT_EYE, EYE_THREASH)
+//         && checkScore(pose, LEFT_EYE, EYE_THREASH)){
+//
+//         let y_delta = pose.keypoints[RIGHT_WRIST].position.y - lastWristY;
+//         let eyes_dist = euclidDist(pose, LEFT_EYE, RIGHT_EYE);
+//
+//
+//         if(weristMovements.length === DIRECTION_CONFIDENCE){ // Understands what arrow to show and zeros the array.
+//             let avg = calcAvg(weristMovements);
+//             console.log("deltas: " + weristMovements)
+//             console.log("avg: " + avg);
+//             if(avg > 0){                 // DOWN!
+//                 hideImage("upArrow");
+//                 showImage("downArrow");
+//                 decreaseVolume();
+//                 console.log("decrease volume");
+//                 console.log("volume: ", player.getVolume());
+//             }
+//
+//             if(avg < 0){                  // UP!
+//                 hideImage("downArrow");
+//                 showImage("upArrow");
+//                 raiseVolume();
+//                 console.log("raise volume");
+//                 console.log("volume: ", player.getVolume());
+//             }
+//
+//             weristMovements = [];
+//         }
+//
+//         if(y_delta >= 1.5*eyes_dist ||  y_delta<= -1.5*eyes_dist){
+//             weristMovements.push(y_delta);
+//         }
+//     }
+// }
+
 /**
  * Records the wrist movements of the user and keeps them in the global array detectedDirections[].
  * @param pose
@@ -454,8 +521,8 @@ function recordWristMovement(pose){
 
         if (y_delta >= 0.3*eyes_dist) {
             if(downsDetected >= DOWNS_SENSITIVITY){
-                hideImage("upArrow");
-                showImage("downArrow");
+                // hideImage("upArrow");
+                // showImage("downArrow");
                 downsDetected = 0;
             } else {
                 downsDetected ++;
@@ -467,8 +534,8 @@ function recordWristMovement(pose){
         }
         else if(y_delta <= -0.3*eyes_dist) {
             if(upsDetected >= UPS_SENSITIVITY){
-                hideImage("downArrow");
-                showImage("upArrow");
+                // hideImage("downArrow");
+                // showImage("upArrow");
                 upsDetected = 0;
             } else {
                 upsDetected ++;
@@ -482,6 +549,7 @@ function recordWristMovement(pose){
         }
     }
 }
+
 
 /**
  * This function inspects the current pose and checks if its a spacial pose.
@@ -502,14 +570,14 @@ function poseDetection() {
             if (omsDetected !== 0) {
                 listeningBar.set((1 - countdown/SLEEP_TIME)*100);
             }
-            console.log("delaying");
+            // console.log("delaying");
             return;
         }
         listeningBar.set(0);
 
         // Waits for activation:
         if (omsDetected === 0) {
-            console.log("Waits for activation");
+            // console.log("Waits for activation");
             detectOm(pose);
         }
         else {
@@ -521,9 +589,9 @@ function poseDetection() {
                 if (detectOm(pose)) {
                     playPauseVid();
                     listeningTimeLeft = 0;
-                    hideImage("downArrow");
+                    // hideImage("downArrow");
                     downsDetected = 0;
-                    hideImage("upArrow");
+                    // hideImage("upArrow");
                     upsDetected = 0;
                     counter = 0;
                     omsDetected = 0; // two oms were detected - reset counter and wait for activation again.
@@ -545,9 +613,9 @@ function poseDetection() {
             } else { // End of listening time.
                 omsDetected = 0;
                 downsDetected = 0;
-                hideImage("downArrow");
+                // hideImage("downArrow");
                 upsDetected = 0;
-                hideImage("upArrow");
+                // hideImage("upArrow");
                 counter = 0;
                 if (player.getPlayerState() !== PLAYING) {
                     document.getElementById("playerStateIndicator").innerHTML = "Paused";
