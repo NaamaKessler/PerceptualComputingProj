@@ -322,7 +322,7 @@ const EYE_THREASH = 0.2;
 // Pose sensitivity:
 const SLEEP_TIME = 70;       // Determines the number of poses we consider as "junk" after a spacial pose was detected.
 const OM_SENSITIVITY = 10;   // Determines how many Oms in a row we consider as a true Om (not noise)
-const LISTENING_TIME = 250; // Determines for how many iterations we listen to the user's commands after activation.
+const LISTENING_TIME = 170; // Determines for how many iterations we listen to the user's commands after activation.
 const DOWNS_SENSITIVITY = 5;
 const UPS_SENSITIVITY = 5;
 const DIRECTION_CONFIDENCE = 7;
