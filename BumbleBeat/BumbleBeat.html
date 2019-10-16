@@ -12,7 +12,6 @@
 
 <body>
     <div id="mainWindow">
-
         <!-- Left stripe of screen: -->
         <div id="userGuidance">
             <div id="playerStateIndicator" style="color:#181717">Reserved Line</div>
@@ -32,13 +31,8 @@
                     } </style>
             </div>
 
-<!--            <div id="guidingVolumeArrows">-->
-<!--                <img src="icons/64PixUp.png" height="128" width="128" id = "upArrow"/>-->
-<!--                <img src="icons/64PixDown.png" height="128" width="128" id = "downArrow"/>-->
-<!--            </div>-->
-
-            <div id="skeleton"> <!-- PoseNet skeleton -->
-<!--                <script type="text/javascript" src=BumbleBeat.js></script>-->
+            <!-- PoseNet skeleton -->
+            <div id="skeleton">
                 <div id = "root">
                     <div id="player"></div>
                     <p id='status'></p>
@@ -48,8 +42,7 @@
             <!-- quick guide link  -->
             <div id = "guideModal">
                 <img id = "guideButton" src="images\GuideLogo.png" class="buttons">
-<!--                <input id = "guideButton" class="buttons" type="image" src="icons\info32.png"/>-->
-<!--                <button id = "guideButton">Guide</button>-->
+
                 <!-- The Modal -->
                 <div id="myModal" class="modal">
 
@@ -58,12 +51,11 @@
 
                     <!-- Modal Content (The Image) -->
                     <img id="myImg" class= "modal-content" src="images/GuideFinished.png" alt="">
-                    <!-- Modal Caption (Image Text) -->
 
+                    <!-- Modal Caption (Image Text) -->
                     <div id="caption"></div>
                 </div>
             </div>
-
         </div>
 
         <!-- right (main) part of screen-->
@@ -105,11 +97,7 @@
 
             </div>
         </div>
-
     </div>
-
     <script type="text/javascript" src=BumbleBeat.js></script>
-
-
 </body>
 </html>

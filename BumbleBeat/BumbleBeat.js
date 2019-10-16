@@ -1,20 +1,19 @@
+// TODO: documentation
+// TODO: separate to multiple files.
+// TODO: volume funcs are unnecessary & add vol const
+
 //-----------------------HTML related------------------------//
 let listeningBar = new ldBar("#myItem1");
 let musicBar = new ldBar("#musicBar");
-let images = ["images/dogDancing.PNG", "images/catDance.PNG"]; //(Noy) When replacing songs, we can do this: https://stackoverflow.com/questions/11722400/programmatically-change-the-src-of-an-img-tag  with the id "songPic"
-let names = ["I Want You Back - Jackson 5", "some other song"]; //(Noy) We can do the same with getElementId.innerText (https://stackoverflow.com/questions/8550251/how-do-i-replace-change-the-heading-text-inside-h3-h3-using-jquery)
 
 // Get the modal
 let modal = document.getElementById("myModal");
 
 // Get the image and insert it inside the modal - use its "alt" text as a caption
 let guideButton = document.getElementById("guideButton");
-let modalImg = document.getElementById("img01");
-let captionText = document.getElementById("caption");
+
 guideButton.onclick = function(){
     modal.style.display = "block";
-    // modalImg.src = this.src;
-    // captionText.innerHTML = this.alt;
 };
 
 // Get the <span> element that closes the modal
@@ -25,16 +24,6 @@ span.onclick = function() {
     modal.style.display = "none";
 };
 
-
-function hideImage(id) {
-    let img = document.getElementById(id);
-    img.style.visibility = 'hidden';
-}
-
-function showImage(id) {
-    let img = document.getElementById(id);
-    img.style.visibility = 'visible';
-}
 
 function updatePlayerProgress(){
     let curr = !player.getCurrentTime ? 0.0 : player.getCurrentTime();
@@ -60,8 +49,6 @@ function updatePlayerProgress(){
     }
 }
 
-// hideImage("downArrow");
-// hideImage("upArrow");
 //----------------------INIT YOUTUBE---------------------------//
 
 // This code loads the IFrame Player API code asynchronously.
@@ -70,14 +57,14 @@ tag.src = "https://www.youtube.com/iframe_api";
 let firstScriptTag = document.getElementsByTagName('script')[0];
 firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-playlistIds = ['s3Q80mk7bxE', 'nqxVMLVe62U', '0fAQhSRLQnM', 'unfzfe8f9NI'];
-albumsCoverPics = ['album_cover_pics/Diana_Ross_Presents_the_Jackson_5.jpg',
-'album_cover_pics/Jacksons-destiny.jpg', 'album_cover_pics/sultans-front-b.jpg',
-    "album_cover_pics/Mamma_Mia_Intermezzo_No_1.jpg"];
-songsNames = ['I Want You Back', 'Blame it on the Boogie', 'Sultans of Swing', 'Mamma Mia'];
-artistsDetails = ['The Jackson 5', 'The Jackson 5', 'Dire Straits', 'ABBA'];
-albumsNames = ['Diana Ross Presents the Jackson 5', 'Destiny', 'Sultans of Swing', ''];
-currentlyPlayingIdx = 0;
+let playlistIds = ['s3Q80mk7bxE', 'nqxVMLVe62U', '0fAQhSRLQnM', 'unfzfe8f9NI'];
+let albumsCoverPics = ['album_cover_pics/Diana_Ross_Presents_the_Jackson_5.jpg',
+                        'album_cover_pics/Jacksons-destiny.jpg', 'album_cover_pics/sultans-front-b.jpg',
+                        "album_cover_pics/Mamma_Mia_Intermezzo_No_1.jpg"];
+let songsNames = ['I Want You Back', 'Blame it on the Boogie', 'Sultans of Swing', 'Mamma Mia'];
+let artistsDetails = ['The Jackson 5', 'The Jackson 5', 'Dire Straits', 'ABBA'];
+let albumsNames = ['Diana Ross Presents the Jackson 5', 'Destiny', 'Sultans of Swing', ''];
+let currentlyPlayingIdx = 0;
 
 /**
  * This function creates an <iframe> (and YouTube poseDemo) after the API code downloads.
@@ -106,7 +93,7 @@ let WIDTH = 350;
  * Sets up the poseNet library:
  */
 function setup() {
-    var canvas = createCanvas(WIDTH, HIGHT);
+    let canvas = createCanvas(WIDTH, HIGHT);
     canvas.background(6, 6, 6);
     canvas.parent('skeleton');
     video = createCapture(VIDEO);
@@ -253,9 +240,7 @@ function drawKeypoints()  {
 }
 
 
-//----------------------------PLAYER CONTROL-----------------------------// // TODO: those funcs are unnecessary & add vol const
-
-let countdownState = 3;
+//----------------------------PLAYER CONTROL-----------------------------//
 
 /**
  * Called when the play-pause button is clicked.
@@ -264,12 +249,12 @@ function playPauseVid(){
     let buttonId = document.getElementById("playPause");
     if(player.getPlayerState() === PLAYING){
         player.pauseVideo();
-        // console.log("paused!");
+        console.log("playPauseVid: paused!");
         document.getElementById("playerStateIndicator").innerHTML = "Paused";
         buttonId.src = "icons\\play-button.png"
     } else {
         player.playVideo();
-        // console.log("playing!");
+        console.log("playPauseVid: playing!");
         document.getElementById("playerStateIndicator").innerHTML = "Playing";
         buttonId.src = "icons\\pause.png"
     }
@@ -325,7 +310,6 @@ const OM_SENSITIVITY = 10;   // Determines how many Oms in a row we consider as 
 const LISTENING_TIME = 170; // Determines for how many iterations we listen to the user's commands after activation.
 const DOWNS_SENSITIVITY = 5;
 const UPS_SENSITIVITY = 5;
-const DIRECTION_CONFIDENCE = 7;
 
 // Player's states
 const PLAYING = 1;
@@ -340,7 +324,6 @@ let upsDetected = 0;
 let downsDetected = 0;
 let lastWristX = -1;
 let lastWristY = -1;
-let weristMovements = [];   // Records the wrist movements(deltas) for the last DIRECTION_CONFIDENCE iterations.
 
 
 //---------------FUNCTIONS
@@ -443,70 +426,6 @@ function updateWristCoords(pose) {
     lastWristY = pose.keypoints[RIGHT_WRIST].position.y;
 }
 
-function calcMedian(values){
-    if(values.length ===0) return 0;
-
-    values.sort(function(a,b){
-        return a-b;
-    });
-
-    let half = Math.floor(values.length / 2);
-
-    if (values.length % 2)
-        return values[half];
-
-    return (values[half - 1] + values[half]) / 2.0;
-}
-
-function calcAvg(values){
-    let total = 0;
-    for(let i = 0; i < values.length; i++) {
-        total += values[i];
-    }
-    return  total / values.length;
-}
-
-
-// /**
-//  * Records the wrist movements of the user and keeps them in the global array detectedDirections[].
-//  * @param pose
-//  */
-// function recordWristMovement(pose){
-//     if(checkScore(pose, RIGHT_WRIST, WRIST_THRESH) && checkScore(pose, RIGHT_EYE, EYE_THREASH)
-//         && checkScore(pose, LEFT_EYE, EYE_THREASH)){
-//
-//         let y_delta = pose.keypoints[RIGHT_WRIST].position.y - lastWristY;
-//         let eyes_dist = euclidDist(pose, LEFT_EYE, RIGHT_EYE);
-//
-//
-//         if(weristMovements.length === DIRECTION_CONFIDENCE){ // Understands what arrow to show and zeros the array.
-//             let avg = calcAvg(weristMovements);
-//             console.log("deltas: " + weristMovements)
-//             console.log("avg: " + avg);
-//             if(avg > 0){                 // DOWN!
-//                 hideImage("upArrow");
-//                 showImage("downArrow");
-//                 decreaseVolume();
-//                 console.log("decrease volume");
-//                 console.log("volume: ", player.getVolume());
-//             }
-//
-//             if(avg < 0){                  // UP!
-//                 hideImage("downArrow");
-//                 showImage("upArrow");
-//                 raiseVolume();
-//                 console.log("raise volume");
-//                 console.log("volume: ", player.getVolume());
-//             }
-//
-//             weristMovements = [];
-//         }
-//
-//         if(y_delta >= 1.5*eyes_dist ||  y_delta<= -1.5*eyes_dist){
-//             weristMovements.push(y_delta);
-//         }
-//     }
-// }
 
 /**
  * Records the wrist movements of the user and keeps them in the global array detectedDirections[].
@@ -521,31 +440,26 @@ function recordWristMovement(pose){
 
         if (y_delta >= 0.3*eyes_dist) {
             if(downsDetected >= DOWNS_SENSITIVITY){
-                // hideImage("upArrow");
-                // showImage("downArrow");
                 downsDetected = 0;
             } else {
                 downsDetected ++;
             }
             decreaseVolume();
             poseDetected = 10;
-            // console.log("decrease volume");
-            // console.log("volume: ", player.getVolume());
+            console.log("recordWristMovement: decrease volume");
+            console.log("recordWristMovement: volume: ", player.getVolume());
         }
         else if(y_delta <= -0.3*eyes_dist) {
             if(upsDetected >= UPS_SENSITIVITY){
-                // hideImage("downArrow");
-                // showImage("upArrow");
                 upsDetected = 0;
             } else {
                 upsDetected ++;
             }
             raiseVolume();
             poseDetected = 10;
-            // console.log("ups detected: " + upsDetected);
-            // console.log("raise volume");
-            // console.log("volume: ", player.getVolume());
-
+            console.log("recordWristMovement: ups detected: " + upsDetected);
+            console.log("recordWristMovement: raise volume");
+            console.log("recordWristMovement: volume: ", player.getVolume());
         }
     }
 }
@@ -570,14 +484,14 @@ function poseDetection() {
             if (omsDetected !== 0) {
                 listeningBar.set((1 - countdown/SLEEP_TIME)*100);
             }
-            // console.log("delaying");
+            console.log("poseDetection: delaying");
             return;
         }
         listeningBar.set(0);
 
         // Waits for activation:
         if (omsDetected === 0) {
-            // console.log("Waits for activation");
+            console.log("poseDetection: Waits for activation");
             detectOm(pose);
         }
         else {
@@ -589,9 +503,7 @@ function poseDetection() {
                 if (detectOm(pose)) {
                     playPauseVid();
                     listeningTimeLeft = 0;
-                    // hideImage("downArrow");
                     downsDetected = 0;
-                    // hideImage("upArrow");
                     upsDetected = 0;
                     counter = 0;
                     omsDetected = 0; // two oms were detected - reset counter and wait for activation again.
@@ -613,9 +525,7 @@ function poseDetection() {
             } else { // End of listening time.
                 omsDetected = 0;
                 downsDetected = 0;
-                // hideImage("downArrow");
                 upsDetected = 0;
-                // hideImage("upArrow");
                 counter = 0;
                 if (player.getPlayerState() !== PLAYING) {
                     document.getElementById("playerStateIndicator").innerHTML = "Paused";
