@@ -2,8 +2,46 @@
 // TODO: separate to multiple files.
 // TODO: volume funcs are unnecessary & add vol const
 
-// ----------------------INIT YOUTUBE---------------------------//
+// -----------------------MAGIC NUMBERS--------------------------//
+// Player's states
+const PLAYING = 1;
 
+// Init poseNet:
+const HEIGHT = 350;
+const WIDTH = 350;
+
+// Key points
+const LEFT_SHOULDER = 5;
+const RIGHT_SHOULDER = 6;
+const LEFT_ELBOW = 7;
+const RIGHT_ELBOW = 8;
+const LEFT_WRIST = 9;
+const RIGHT_WRIST = 10;
+const LEFT_HIP = 11;
+const RIGHT_HIP = 12;
+const RIGHT_EYE = 2;
+const LEFT_EYE = 1;
+
+// confidences:
+const POSE_CONFIDENCE = 0.2;
+
+// Thresholds
+const WRIST_THRESH = 0.2;
+const ELBOW_THRESH = 0.2;
+const EYE_THRASH = 0.2;
+
+// Pose sensitivity:
+// Determines the number of poses we consider as 'junk' after a spacial pose was detected:
+const SLEEP_TIME = 70;
+// Determines how many Oms in a row we consider as a true Om (not noise):
+const OM_SENSITIVITY = 10;
+// Determines for how many iterations we listen to the user's commands after activation:
+const LISTENING_TIME = 170;
+const DOWNS_SENSITIVITY = 5;
+const UPS_SENSITIVITY = 5;
+
+
+// ----------------------INIT YOUTUBE---------------------------//
 // This code loads the IFrame Player API code asynchronously.
 const tag = document.createElement('script');
 tag.src = 'https://www.youtube.com/iframe_api';
@@ -35,12 +73,9 @@ function onYouTubeIframeAPIReady() {
 }
 
 // ---------------------INIT POSE NET------------------------------//
-
 let video;
 let poseNet;
 let poses = [];
-const HEIGHT = 350;
-const WIDTH = 350;
 
 /**
  * prints(?) to the screen 'Model Loaded' when the model is ready.
@@ -121,35 +156,9 @@ function updatePlayerProgress() {
 
 
 // --------------------------GIVE POSE FEEDBACK----------------------------//
-// Key points
-const LEFT_SHOLDER = 5;
-const RIGHT_SHOLDER = 6;
-const LEFT_ELBOW = 7;
-const RIGHT_ELBOW = 8;
-const LEFT_WRIST = 9;
-const RIGHT_WRIST = 10;
-const LEFT_HIP = 11;
-const RIGHT_HIP = 12;
-const RIGHT_EYE = 2;
-const LEFT_EYE = 1;
-
-// confidences:
-const POSE_CONFIDENCE = 0.2;
-
 // Globals
 let prevPose;
 let poseDetected = 0; // for skeleton color change when a pose is detected
-
-/**
- * Draws the skeleton and key points of each pose when detected.
- */
-function draw() {
-  image(video, 0, 0, WIDTH, HEIGHT);
-  background(24, 23, 23);
-  updatePlayerProgress();
-  drawKeypoints();
-  poseDetection();
-}
 
 /**
  * Draws the actual key points
@@ -166,7 +175,6 @@ function keypointsHelper(pose) {
       } else {
         fill(247, 223, 163);
       }
-      noStroke();
       ellipse(keypoint.position.x, keypoint.position.y, 10, 10);
     }
   }
@@ -190,13 +198,13 @@ function drawLine(pose, kp1, kp2) {
 }
 
 function skeletonHelper(pose) {
-  drawLine(pose, LEFT_SHOLDER, RIGHT_SHOLDER);
-  drawLine(pose, LEFT_SHOLDER, LEFT_ELBOW);
+  drawLine(pose, LEFT_SHOULDER, RIGHT_SHOULDER);
+  drawLine(pose, LEFT_SHOULDER, LEFT_ELBOW);
   drawLine(pose, LEFT_ELBOW, LEFT_WRIST);
-  drawLine(pose, RIGHT_SHOLDER, RIGHT_ELBOW);
+  drawLine(pose, RIGHT_SHOULDER, RIGHT_ELBOW);
   drawLine(pose, RIGHT_ELBOW, RIGHT_WRIST);
-  drawLine(pose, RIGHT_SHOLDER, RIGHT_HIP);
-  drawLine(pose, LEFT_SHOLDER, LEFT_HIP);
+  drawLine(pose, RIGHT_SHOULDER, RIGHT_HIP);
+  drawLine(pose, LEFT_SHOULDER, LEFT_HIP);
   drawLine(pose, RIGHT_HIP, LEFT_HIP);
   if (poseDetected > 0) {
     poseDetected -= 1;
@@ -237,12 +245,18 @@ function drawKeypoints() {
   }
 }
 
+/**
+ * Draws the skeleton and key points of each pose when detected.
+ */
+function draw() {
+  image(video, 0, 0, WIDTH, HEIGHT);
+  background(24, 23, 23);
+  updatePlayerProgress();
+  drawKeypoints();
+  poseDetection();
+}
 
 // ----------------------------PLAYER CONTROL-----------------------------//
-// Player's states
-const PLAYING = 1;
-
-
 /**
  * Called when the play-pause button is clicked.
  */
@@ -296,24 +310,6 @@ function previousSong() {
 }
 
 // ----------------------------POSE DETECTION--------------------------------//
-
-// --------------CONSTANTS:
-
-// Thresholds
-const WRIST_THRESH = 0.2;
-const ELBOW_THRESH = 0.2;
-const EYE_THRASH = 0.2;
-
-// Pose sensitivity:
-// Determines the number of poses we consider as 'junk' after a spacial pose was detected:
-const SLEEP_TIME = 70;
-// Determines how many Oms in a row we consider as a true Om (not noise):
-const OM_SENSITIVITY = 10;
-// Determines for how many iterations we listen to the user's commands after activation:
-const LISTENING_TIME = 170;
-const DOWNS_SENSITIVITY = 5;
-const UPS_SENSITIVITY = 5;
-
 // ---------------GLOBALS
 
 let counter = 0;
