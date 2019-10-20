@@ -5,7 +5,7 @@
 // TODO: fix bugs
 // TODO: magic numbers / text where needed.
 
-// -----------------------CONSTANTS--------------------------//
+// -----------------------MAGIC NUMBERS--------------------------//
 // Player's states
 const PLAYING = 1;
 
@@ -40,6 +40,7 @@ const LISTENING_TIME = 170; // Determines for how many iterations we listen to t
 const DOWNS_SENSITIVITY = 5;
 const UPS_SENSITIVITY = 5;
 
+// -----------------------CONSTANTS--------------------------//
 // HTML related:
 const listeningBar = new ldBar('#myItem1');
 const musicBar = new ldBar('#musicBar');
@@ -52,7 +53,6 @@ const tag = document.createElement('script');
 tag.src = 'https://www.youtube.com/iframe_api';
 const firstScriptTag = document.getElementsByTagName('script')[0];
 firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
 const playlistIds = ['s3Q80mk7bxE', 'nqxVMLVe62U', '0fAQhSRLQnM', 'unfzfe8f9NI'];
 const albumsCoverPics = ['album_cover_pics/Diana_Ross_Presents_the_Jackson_5.jpg',
   'album_cover_pics/Jacksons-destiny.jpg', 'album_cover_pics/sultans-front-b.jpg',
@@ -122,12 +122,11 @@ function setup() {
     outputStride: 8,
     detectionType: 'single',
   }, modelReady);
-  // This sets up an event that fills the global variable 'poses'
-  // with an array every time new poses are detected (listeners)
+  // Sets up an event that insert poses[] a pose each time a new pose is detected:
   poseNet.on('pose', (results) => {
     poses = results;
   });
-  // Hide the video element, and just show the canvas
+  // Hides the video element (to show the canvas only):
   video.hide();
 }
 
