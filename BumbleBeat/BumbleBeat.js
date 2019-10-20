@@ -1,8 +1,11 @@
 // TODO: documentation
 // TODO: separate to multiple files.
 // TODO: volume funcs are unnecessary & add vol const
+// TODO: handle code structure
+// TODO: fix bugs
+// TODO: magic numbers / text where needed.
 
-// -----------------------MAGIC NUMBERS--------------------------//
+// -----------------------CONSTANTS--------------------------//
 // Player's states
 const PLAYING = 1;
 
@@ -31,14 +34,32 @@ const ELBOW_THRESH = 0.2;
 const EYE_THRASH = 0.2;
 
 // Pose sensitivity:
-// Determines the number of poses we consider as 'junk' after a spacial pose was detected:
-const SLEEP_TIME = 70;
-// Determines how many Oms in a row we consider as a true Om (not noise):
-const OM_SENSITIVITY = 10;
-// Determines for how many iterations we listen to the user's commands after activation:
-const LISTENING_TIME = 170;
+const SLEEP_TIME = 70; // Determines the number of poses we consider as 'junk' after a spacial pose was detected:
+const OM_SENSITIVITY = 10; // Determines how many Oms in a row we consider as a true Om (not noise):
+const LISTENING_TIME = 170; // Determines for how many iterations we listen to the user's commands after activation:
 const DOWNS_SENSITIVITY = 5;
 const UPS_SENSITIVITY = 5;
+
+// HTML related:
+const listeningBar = new ldBar('#myItem1');
+const musicBar = new ldBar('#musicBar');
+const modal = document.getElementById('myModal');
+const guideButton = document.getElementById('guideButton');
+const span = document.getElementsByClassName('close')[0];
+
+// Youtube API related:
+const tag = document.createElement('script');
+tag.src = 'https://www.youtube.com/iframe_api';
+const firstScriptTag = document.getElementsByTagName('script')[0];
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+const playlistIds = ['s3Q80mk7bxE', 'nqxVMLVe62U', '0fAQhSRLQnM', 'unfzfe8f9NI'];
+const albumsCoverPics = ['album_cover_pics/Diana_Ross_Presents_the_Jackson_5.jpg',
+  'album_cover_pics/Jacksons-destiny.jpg', 'album_cover_pics/sultans-front-b.jpg',
+  'album_cover_pics/Mamma_Mia_Intermezzo_No_1.jpg'];
+const songsNames = ['I Want You Back', 'Blame it on the Boogie', 'Sultans of Swing', 'Mamma Mia'];
+const artistsDetails = ['The Jackson 5', 'The Jackson 5', 'Dire Straits', 'ABBA'];
+const albumsNames = ['Diana Ross Presents the Jackson 5', 'Destiny', 'Sultans of Swing', ''];
 
 // -----------------------GLOBALS--------------------------//
 // Pose detection:
@@ -60,44 +81,26 @@ let video;
 let poseNet;
 let poses = [];
 
-// HTML related:
-const listeningBar = new ldBar('#myItem1');
-const musicBar = new ldBar('#musicBar');
+// Youtube API related:
+let currentlyPlayingIdx = 0;
+let player;
 
 // ----------------------INIT YOUTUBE---------------------------//
-// This code loads the IFrame Player API code asynchronously.
-const tag = document.createElement('script');
-tag.src = 'https://www.youtube.com/iframe_api';
-const firstScriptTag = document.getElementsByTagName('script')[0];
-firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-const playlistIds = ['s3Q80mk7bxE', 'nqxVMLVe62U', '0fAQhSRLQnM', 'unfzfe8f9NI'];
-const albumsCoverPics = ['album_cover_pics/Diana_Ross_Presents_the_Jackson_5.jpg',
-  'album_cover_pics/Jacksons-destiny.jpg', 'album_cover_pics/sultans-front-b.jpg',
-  'album_cover_pics/Mamma_Mia_Intermezzo_No_1.jpg'];
-const songsNames = ['I Want You Back', 'Blame it on the Boogie', 'Sultans of Swing', 'Mamma Mia'];
-const artistsDetails = ['The Jackson 5', 'The Jackson 5', 'Dire Straits', 'ABBA'];
-const albumsNames = ['Diana Ross Presents the Jackson 5', 'Destiny', 'Sultans of Swing', ''];
-let currentlyPlayingIdx = 0;
-
 /**
  * This function creates an <iframe> (and YouTube poseDemo) after the API code downloads.
  */
-let player;
-
 function onYouTubeIframeAPIReady() {
   player = new YT.Player('player', {
     height: '0',
     width: '0',
     videoId: playlistIds[currentlyPlayingIdx],
-    // playerVars: {listType: 'playlist', list: 'RDEMj7ObS6TgJ5zSOH9DUcVq8Q'},
     events: {},
   });
 }
 
 // ---------------------INIT POSE NET------------------------------//
 /**
- * prints(?) to the screen 'Model Loaded' when the model is ready.
+ * prints to the screen 'Model Loaded' when the model is ready.
  */
 function modelReady() {
   select('#status').html('');
@@ -129,24 +132,13 @@ function setup() {
 }
 
 // -----------------------HTML related------------------------//
-// Get the modal
-const modal = document.getElementById('myModal');
-
-// Get the image and insert it inside the modal - use its 'alt' text as a caption
-const guideButton = document.getElementById('guideButton');
-
-guideButton.onclick = function () {
+guideButton.onclick = function loadGuid() {
   modal.style.display = 'block';
 };
-
-// Get the <span> element that closes the modal
-const span = document.getElementsByClassName('close')[0];
-
 // When the user clicks on <span> (x), close the modal
-span.onclick = function () {
+span.onclick = function closeGuide() {
   modal.style.display = 'none';
 };
-
 
 function updatePlayerProgress() {
   const curr = !player.getCurrentTime ? 0.0 : player.getCurrentTime();
@@ -178,12 +170,12 @@ function playPauseVid() {
   const buttonId = document.getElementById('playPause');
   if (player.getPlayerState() === PLAYING) {
     player.pauseVideo();
-    console.log('playPauseVid: paused!');
+    // console.log('playPauseVid: paused!');
     document.getElementById('playerStateIndicator').innerHTML = 'Paused';
     buttonId.src = 'icons\\play-button.png';
   } else {
     player.playVideo();
-    console.log('playPauseVid: playing!');
+    // console.log('playPauseVid: playing!');
     document.getElementById('playerStateIndicator').innerHTML = 'Playing';
     buttonId.src = 'icons\\pause.png';
   }
@@ -306,7 +298,8 @@ function detectOm(pose) {
       omsDetected += 1;
       listeningTimeLeft = LISTENING_TIME;
       if (omsDetected === 1) { // indicates delay
-        document.getElementById('playerStateIndicator').innerHTML = 'Got it! \nJust a Sec...';
+        document.getElementById('playerStateIndicator')
+          .innerHTML = 'Got it! \nJust a Sec...';
         document.getElementById('playerStateIndicator').style.color = '#F7DFA3';
         poseDetected = 10;
       }
@@ -343,8 +336,8 @@ function recordWristMovement(pose) {
       }
       decreaseVolume();
       poseDetected = 10;
-      console.log('recordWristMovement: decrease volume');
-      console.log('recordWristMovement: volume: ', player.getVolume());
+      // console.log('recordWristMovement: decrease volume');
+      // console.log('recordWristMovement: volume: ', player.getVolume());
     } else if (yDelta <= -0.3 * eyesDist) {
       if (upsDetected >= UPS_SENSITIVITY) {
         upsDetected = 0;
@@ -353,9 +346,9 @@ function recordWristMovement(pose) {
       }
       raiseVolume();
       poseDetected = 10;
-      console.log(`recordWristMovement: ups detected: ${upsDetected}`);
-      console.log('recordWristMovement: raise volume');
-      console.log('recordWristMovement: volume: ', player.getVolume());
+      // console.log(`recordWristMovement: ups detected: ${upsDetected}`);
+      // console.log('recordWristMovement: raise volume');
+      // console.log('recordWristMovement: volume: ', player.getVolume());
     }
   }
 }
@@ -379,14 +372,14 @@ function poseDetection() {
       if (omsDetected !== 0) {
         listeningBar.set((1 - countdown / SLEEP_TIME) * 100);
       }
-      console.log('poseDetection: delaying');
+      // console.log('poseDetection: delaying');
       return;
     }
     listeningBar.set(0);
 
     // Waits for activation:
     if (omsDetected === 0) {
-      console.log('poseDetection: Waits for activation');
+      // console.log('poseDetection: Waits for activation');
       detectOm(pose);
     } else {
       // Indicates that the player is listening
@@ -438,7 +431,7 @@ function keypointsHelper(pose) {
   for (let j = 0; j < pose.keypoints.length; j += 1) {
     // A keypoint is an object describing a body part (like rightArm or leftShoulder)
     const keypoint = pose.keypoints[j];
-    // Only draw an ellipse is the pose probability is bigger than 0.2
+    // Only draw an ellipse if the pose probability is bigger than 0.2
     if (keypoint.score > 0.2) {
       if (poseDetected > 0) {
         fill(163, 247, 223);
