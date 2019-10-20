@@ -3,64 +3,64 @@
 // TODO: volume funcs are unnecessary & add vol const
 
 //-----------------------HTML related------------------------//
-let listeningBar = new ldBar("#myItem1");
-let musicBar = new ldBar("#musicBar");
+let listeningBar = new ldBar('#myItem1');
+let musicBar = new ldBar('#musicBar');
 
 // Get the modal
-let modal = document.getElementById("myModal");
+let modal = document.getElementById('myModal');
 
-// Get the image and insert it inside the modal - use its "alt" text as a caption
-let guideButton = document.getElementById("guideButton");
+// Get the image and insert it inside the modal - use its 'alt' text as a caption
+let guideButton = document.getElementById('guideButton');
 
-guideButton.onclick = function(){
-    modal.style.display = "block";
+guideButton.onclick = function () {
+  modal.style.display = 'block';
 };
 
 // Get the <span> element that closes the modal
-let span = document.getElementsByClassName("close")[0];
+let span = document.getElementsByClassName('close')[0];
 
 // When the user clicks on <span> (x), close the modal
-span.onclick = function() {
-    modal.style.display = "none";
+span.onclick = function () {
+  modal.style.display = 'none';
 };
 
 
-function updatePlayerProgress(){
-    let curr = !player.getCurrentTime ? 0.0 : player.getCurrentTime();
-    let total = !player.getDuration ? 0.0 : player.getDuration();
-    musicBar.set((curr/total) * 100);
+function updatePlayerProgress() {
+  let curr = !player.getCurrentTime ? 0.0 : player.getCurrentTime();
+  let total = !player.getDuration ? 0.0 : player.getDuration();
+  musicBar.set((curr / total) * 100);
 
-    let totalMinutes = Math.floor(total / 60).toString();
-    let totalSec = Math.floor(total - totalMinutes*60).toString();
-    let currMinutes = Math.floor(curr / 60).toString();
-    let currSec = Math.floor(curr - currMinutes*60).toString();
+  let totalMinutes = Math.floor(total / 60).toString();
+  let totalSec = Math.floor(total - totalMinutes * 60).toString();
+  let currMinutes = Math.floor(curr / 60).toString();
+  let currSec = Math.floor(curr - currMinutes * 60).toString();
 
-    if(player.getPlayerState() === PLAYING && currSec >=0){
-        if(currSec < 10){
-            document.getElementById("currTime").innerHTML = currMinutes + ":0" + currSec;
-        } else{
-            document.getElementById("currTime").innerHTML = currMinutes + ":" + currSec;
-        }
-        if(totalSec < 10){
-            document.getElementById("totalTime").innerHTML =  totalMinutes + ":0" + totalSec ;
-        } else{
-            document.getElementById("totalTime").innerHTML =  totalMinutes + ":" + totalSec ;
-        }
+  if (player.getPlayerState() === PLAYING && currSec >= 0) {
+    if (currSec < 10) {
+      document.getElementById('currTime').innerHTML = currMinutes + ':0' + currSec;
+    } else {
+      document.getElementById('currTime').innerHTML = currMinutes + ':' + currSec;
     }
+    if (totalSec < 10) {
+      document.getElementById('totalTime').innerHTML = totalMinutes + ':0' + totalSec;
+    } else {
+      document.getElementById('totalTime').innerHTML = totalMinutes + ':' + totalSec;
+    }
+  }
 }
 
 //----------------------INIT YOUTUBE---------------------------//
 
 // This code loads the IFrame Player API code asynchronously.
 let tag = document.createElement('script');
-tag.src = "https://www.youtube.com/iframe_api";
+tag.src = 'https://www.youtube.com/iframe_api';
 let firstScriptTag = document.getElementsByTagName('script')[0];
 firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
 let playlistIds = ['s3Q80mk7bxE', 'nqxVMLVe62U', '0fAQhSRLQnM', 'unfzfe8f9NI'];
 let albumsCoverPics = ['album_cover_pics/Diana_Ross_Presents_the_Jackson_5.jpg',
-                        'album_cover_pics/Jacksons-destiny.jpg', 'album_cover_pics/sultans-front-b.jpg',
-                        "album_cover_pics/Mamma_Mia_Intermezzo_No_1.jpg"];
+  'album_cover_pics/Jacksons-destiny.jpg', 'album_cover_pics/sultans-front-b.jpg',
+  'album_cover_pics/Mamma_Mia_Intermezzo_No_1.jpg'];
 let songsNames = ['I Want You Back', 'Blame it on the Boogie', 'Sultans of Swing', 'Mamma Mia'];
 let artistsDetails = ['The Jackson 5', 'The Jackson 5', 'Dire Straits', 'ABBA'];
 let albumsNames = ['Diana Ross Presents the Jackson 5', 'Destiny', 'Sultans of Swing', ''];
@@ -70,14 +70,15 @@ let currentlyPlayingIdx = 0;
  * This function creates an <iframe> (and YouTube poseDemo) after the API code downloads.
  */
 let player;
+
 function onYouTubeIframeAPIReady() {
-    player = new YT.Player('player', {
-        height: '0',
-        width: '0',
-        videoId: playlistIds[currentlyPlayingIdx],
-        // playerVars: {listType: 'playlist', list: 'RDEMj7ObS6TgJ5zSOH9DUcVq8Q'},
-        events: {}
-    });
+  player = new YT.Player('player', {
+    height: '0',
+    width: '0',
+    videoId: playlistIds[currentlyPlayingIdx],
+    // playerVars: {listType: 'playlist', list: 'RDEMj7ObS6TgJ5zSOH9DUcVq8Q'},
+    events: {}
+  });
 }
 
 //---------------------INIT POSE NET------------------------------//
@@ -93,32 +94,32 @@ let WIDTH = 350;
  * Sets up the poseNet library:
  */
 function setup() {
-    let canvas = createCanvas(WIDTH, HIGHT);
-    canvas.background(6, 6, 6);
-    canvas.parent('skeleton');
-    video = createCapture(VIDEO);
-    video.size(WIDTH, HIGHT);
+  let canvas = createCanvas(WIDTH, HIGHT);
+  canvas.background(6, 6, 6);
+  canvas.parent('skeleton');
+  video = createCapture(VIDEO);
+  video.size(WIDTH, HIGHT);
 
-    // Create a new poseNet method with a single detection
-    poseNet = ml5.poseNet(video, {
-        imageScaleFactor: 0.6,
-        outputStride: 8,
-        detectionType: 'single',
-    }, modelReady);
-    // This sets up an event that fills the global variable "poses"
-    // with an array every time new poses are detected (listeners)
-    poseNet.on('pose', function(results) {
-        poses = results;
-    });
-    // Hide the video element, and just show the canvas
-    video.hide();
+  // Create a new poseNet method with a single detection
+  poseNet = ml5.poseNet(video, {
+    imageScaleFactor: 0.6,
+    outputStride: 8,
+    detectionType: 'single',
+  }, modelReady);
+  // This sets up an event that fills the global variable 'poses'
+  // with an array every time new poses are detected (listeners)
+  poseNet.on('pose', function (results) {
+    poses = results;
+  });
+  // Hide the video element, and just show the canvas
+  video.hide();
 }
 
 /**
  * prints(?) to the screen 'Model Loaded' when the model is ready.
  */
 function modelReady() {
-    select('#status').html('');
+  select('#status').html('');
 }
 
 //--------------------------GIVE POSE FEEDBACK----------------------------//
@@ -145,11 +146,11 @@ let poseDetected = 0; //for skeleton color change when a pose is detected
  * Draws the skeleton and key points of each pose when detected.
  */
 function draw() {
-    image(video, 0, 0, WIDTH, HIGHT);
-    background(24,23,23);
-    updatePlayerProgress();
-    drawKeypoints();
-    poseDetection();
+  image(video, 0, 0, WIDTH, HIGHT);
+  background(24, 23, 23);
+  updatePlayerProgress();
+  drawKeypoints();
+  poseDetection();
 }
 
 /**
@@ -157,20 +158,20 @@ function draw() {
  * @param pose
  */
 function keypointsHelper(pose) {
-    for (let j = 0; j < pose.keypoints.length; j++) {
-        // A keypoint is an object describing a body part (like rightArm or leftShoulder)
-        let keypoint = pose.keypoints[j];
-        // Only draw an ellipse is the pose probability is bigger than 0.2
-        if (keypoint.score > 0.2) {
-            if (poseDetected > 0) {
-                fill(163,247,223);
-            } else {
-                fill(247, 223, 163);
-            }
-            noStroke();
-            ellipse(keypoint.position.x, keypoint.position.y, 10, 10);
-        }
+  for (let j = 0; j < pose.keypoints.length; j++) {
+    // A keypoint is an object describing a body part (like rightArm or leftShoulder)
+    let keypoint = pose.keypoints[j];
+    // Only draw an ellipse is the pose probability is bigger than 0.2
+    if (keypoint.score > 0.2) {
+      if (poseDetected > 0) {
+        fill(163, 247, 223);
+      } else {
+        fill(247, 223, 163);
+      }
+      noStroke();
+      ellipse(keypoint.position.x, keypoint.position.y, 10, 10);
     }
+  }
 }
 
 /**
@@ -179,64 +180,64 @@ function keypointsHelper(pose) {
  * @param kp1
  * @param kp2
  */
-function drawLine(pose, kp1, kp2){
-    if (poseDetected > 0) {
-        stroke(163,247,223);
-    } else {
-        stroke(247, 223, 163);
-    }
+function drawLine(pose, kp1, kp2) {
+  if (poseDetected > 0) {
+    stroke(163, 247, 223);
+  } else {
+    stroke(247, 223, 163);
+  }
 
-    line(pose.keypoints[kp1].position.x, pose.keypoints[kp1].position.y,
-        pose.keypoints[kp2].position.x, pose.keypoints[kp2].position.y);
+  line(pose.keypoints[kp1].position.x, pose.keypoints[kp1].position.y,
+      pose.keypoints[kp2].position.x, pose.keypoints[kp2].position.y);
 }
 
 function skeletonHelper(pose) {
-    drawLine(pose, LEFT_SHOLDER, RIGHT_SHOLDER);
-    drawLine(pose, LEFT_SHOLDER, LEFT_ELBOW);
-    drawLine(pose, LEFT_ELBOW, LEFT_WRIST);
-    drawLine(pose, RIGHT_SHOLDER, RIGHT_ELBOW);
-    drawLine(pose, RIGHT_ELBOW, RIGHT_WRIST);
-    drawLine(pose, RIGHT_SHOLDER, RIGHT_HIP);
-    drawLine(pose, LEFT_SHOLDER, LEFT_HIP);
-    drawLine(pose, RIGHT_HIP, LEFT_HIP);
-    if (poseDetected > 0){
-        poseDetected --;
-    }
+  drawLine(pose, LEFT_SHOLDER, RIGHT_SHOLDER);
+  drawLine(pose, LEFT_SHOLDER, LEFT_ELBOW);
+  drawLine(pose, LEFT_ELBOW, LEFT_WRIST);
+  drawLine(pose, RIGHT_SHOLDER, RIGHT_ELBOW);
+  drawLine(pose, RIGHT_ELBOW, RIGHT_WRIST);
+  drawLine(pose, RIGHT_SHOLDER, RIGHT_HIP);
+  drawLine(pose, LEFT_SHOLDER, LEFT_HIP);
+  drawLine(pose, RIGHT_HIP, LEFT_HIP);
+  if (poseDetected > 0) {
+    poseDetected--;
+  }
 }
 
 /**
  * A function to draw ellipses over the detected key points.
  */
-function drawKeypoints()  {
-    // Loop through all the poses detected
-    for (let i = 0; i < poses.length; i++) {
-        let pose = poses[i].pose;
+function drawKeypoints() {
+  // Loop through all the poses detected
+  for (let i = 0; i < poses.length; i++) {
+    let pose = poses[i].pose;
 
-        if(!prevPose){ // Inits prevPose with the first valid pose:
-            if(pose){
-                if(pose.score < POSE_CONFIDENCE){
-                    return;
-                }
-            }
-            prevPose = pose;
-            return;
+    if (!prevPose) { // Inits prevPose with the first valid pose:
+      if (pose) {
+        if (pose.score < POSE_CONFIDENCE) {
+          return;
         }
-
-        if (!pose) {
-            keypointsHelper(prevPose); // Draws the last valid pose.
-            skeletonHelper(prevPose);
-        } else{
-            if(pose.score < POSE_CONFIDENCE){
-                keypointsHelper(prevPose); // Draws the last valid pose.
-                skeletonHelper(prevPose);
-                return;
-            }
-            keypointsHelper(pose);
-            skeletonHelper(pose);
-            prevPose = pose;
-        }
-
+      }
+      prevPose = pose;
+      return;
     }
+
+    if (!pose) {
+      keypointsHelper(prevPose); // Draws the last valid pose.
+      skeletonHelper(prevPose);
+    } else {
+      if (pose.score < POSE_CONFIDENCE) {
+        keypointsHelper(prevPose); // Draws the last valid pose.
+        skeletonHelper(prevPose);
+        return;
+      }
+      keypointsHelper(pose);
+      skeletonHelper(pose);
+      prevPose = pose;
+    }
+
+  }
 }
 
 
@@ -245,54 +246,54 @@ function drawKeypoints()  {
 /**
  * Called when the play-pause button is clicked.
  */
-function playPauseVid(){
-    let buttonId = document.getElementById("playPause");
-    if(player.getPlayerState() === PLAYING){
-        player.pauseVideo();
-        console.log("playPauseVid: paused!");
-        document.getElementById("playerStateIndicator").innerHTML = "Paused";
-        buttonId.src = "icons\\play-button.png"
-    } else {
-        player.playVideo();
-        console.log("playPauseVid: playing!");
-        document.getElementById("playerStateIndicator").innerHTML = "Playing";
-        buttonId.src = "icons\\pause.png"
-    }
+function playPauseVid() {
+  let buttonId = document.getElementById('playPause');
+  if (player.getPlayerState() === PLAYING) {
+    player.pauseVideo();
+    console.log('playPauseVid: paused!');
+    document.getElementById('playerStateIndicator').innerHTML = 'Paused';
+    buttonId.src = 'icons\\play-button.png'
+  } else {
+    player.playVideo();
+    console.log('playPauseVid: playing!');
+    document.getElementById('playerStateIndicator').innerHTML = 'Playing';
+    buttonId.src = 'icons\\pause.png'
+  }
 }
 
 function raiseVolume() {
-    const currVolume = player.getVolume() + 7;
-    player.setVolume(currVolume);
+  const currVolume = player.getVolume() + 7;
+  player.setVolume(currVolume);
 }
 
 
 function decreaseVolume() {
-    const currVolume = player.getVolume() - 7;
-    player.setVolume(currVolume);
+  const currVolume = player.getVolume() - 7;
+  player.setVolume(currVolume);
 }
 
 function changeSongsMetaData() {
-    document.getElementById('albumCover').src = albumsCoverPics[currentlyPlayingIdx];
-    document.getElementById('songName').innerHTML = songsNames[currentlyPlayingIdx];
-    document.getElementById('artistName').innerHTML = artistsDetails[currentlyPlayingIdx];
-    document.getElementById('albumName').innerHTML = albumsNames[currentlyPlayingIdx];
+  document.getElementById('albumCover').src = albumsCoverPics[currentlyPlayingIdx];
+  document.getElementById('songName').innerHTML = songsNames[currentlyPlayingIdx];
+  document.getElementById('artistName').innerHTML = artistsDetails[currentlyPlayingIdx];
+  document.getElementById('albumName').innerHTML = albumsNames[currentlyPlayingIdx];
 }
 
 function nextSong() {
-    currentlyPlayingIdx = (currentlyPlayingIdx + 1) % playlistIds.length;
-    player.loadVideoById(playlistIds[currentlyPlayingIdx]);
-    changeSongsMetaData();
+  currentlyPlayingIdx = (currentlyPlayingIdx + 1) % playlistIds.length;
+  player.loadVideoById(playlistIds[currentlyPlayingIdx]);
+  changeSongsMetaData();
 
 }
 
 function previousSong() {
-    if (currentlyPlayingIdx === 0){
-        currentlyPlayingIdx = playlistIds.length-1;
-    } else {
-        currentlyPlayingIdx --;
-    }
-    player.loadVideoById(playlistIds[currentlyPlayingIdx]);
-    changeSongsMetaData();
+  if (currentlyPlayingIdx === 0) {
+    currentlyPlayingIdx = playlistIds.length - 1;
+  } else {
+    currentlyPlayingIdx--;
+  }
+  player.loadVideoById(playlistIds[currentlyPlayingIdx]);
+  changeSongsMetaData();
 }
 
 //----------------------------POSE DETECTION--------------------------------//
@@ -305,7 +306,7 @@ const ELBOW_THRESH = 0.2;
 const EYE_THREASH = 0.2;
 
 // Pose sensitivity:
-const SLEEP_TIME = 70;       // Determines the number of poses we consider as "junk" after a spacial pose was detected.
+const SLEEP_TIME = 70;       // Determines the number of poses we consider as 'junk' after a spacial pose was detected.
 const OM_SENSITIVITY = 10;   // Determines how many Oms in a row we consider as a true Om (not noise)
 const LISTENING_TIME = 170; // Determines for how many iterations we listen to the user's commands after activation.
 const DOWNS_SENSITIVITY = 5;
@@ -333,9 +334,9 @@ let lastWristY = -1;
  * @param keyPoint1
  * @param keyPoint2
  */
-function euclidDist(pose, keyPoint1, keyPoint2){
-    return Math.sqrt(Math.pow((pose.keypoints[keyPoint1].position.y - pose.keypoints[keyPoint2].position.y), 2) +
-        Math.pow((pose.keypoints[keyPoint1].position.x - pose.keypoints[keyPoint2].position.x), 2));
+function euclidDist(pose, keyPoint1, keyPoint2) {
+  return Math.sqrt(Math.pow((pose.keypoints[keyPoint1].position.y - pose.keypoints[keyPoint2].position.y), 2) +
+      Math.pow((pose.keypoints[keyPoint1].position.x - pose.keypoints[keyPoint2].position.x), 2));
 }
 
 /**
@@ -345,8 +346,8 @@ function euclidDist(pose, keyPoint1, keyPoint2){
  * @param keyPoint2
  * @param errThresh
  */
-function sameHeight(pose, keyPoint1, keyPoint2, errThresh){
-    return Math.abs(pose.keypoints[keyPoint1].position.y - pose.keypoints[keyPoint2].position.y) < errThresh;
+function sameHeight(pose, keyPoint1, keyPoint2, errThresh) {
+  return Math.abs(pose.keypoints[keyPoint1].position.y - pose.keypoints[keyPoint2].position.y) < errThresh;
 }
 
 /**
@@ -355,8 +356,8 @@ function sameHeight(pose, keyPoint1, keyPoint2, errThresh){
  * @param keyPoint
  * @param threshold
  */
-function checkScore(pose, keyPoint, threshold){
-    return pose.keypoints[keyPoint].score > threshold;
+function checkScore(pose, keyPoint, threshold) {
+  return pose.keypoints[keyPoint].score > threshold;
 }
 
 /**
@@ -365,9 +366,9 @@ function checkScore(pose, keyPoint, threshold){
  * @param errThresh
  * @returns {*}
  */
-function elbowsAligned(pose, errThresh){
-    return checkScore(pose, LEFT_ELBOW, ELBOW_THRESH) && checkScore(pose, RIGHT_ELBOW, ELBOW_THRESH) &&
-        sameHeight(pose, LEFT_ELBOW, RIGHT_ELBOW, errThresh);
+function elbowsAligned(pose, errThresh) {
+  return checkScore(pose, LEFT_ELBOW, ELBOW_THRESH) && checkScore(pose, RIGHT_ELBOW, ELBOW_THRESH) &&
+      sameHeight(pose, LEFT_ELBOW, RIGHT_ELBOW, errThresh);
 }
 
 /**
@@ -375,10 +376,10 @@ function elbowsAligned(pose, errThresh){
  * @param pose
  * @param errThresh
  */
-function closeWrists(pose, errThresh){
-    const wrist_dist = euclidDist(pose, LEFT_WRIST, RIGHT_WRIST);
-    return checkScore(pose, LEFT_WRIST, WRIST_THRESH) &&
-        checkScore(pose, RIGHT_WRIST, WRIST_THRESH) && wrist_dist < errThresh;
+function closeWrists(pose, errThresh) {
+  const wrist_dist = euclidDist(pose, LEFT_WRIST, RIGHT_WRIST);
+  return checkScore(pose, LEFT_WRIST, WRIST_THRESH) &&
+      checkScore(pose, RIGHT_WRIST, WRIST_THRESH) && wrist_dist < errThresh;
 }
 
 /**
@@ -386,9 +387,9 @@ function closeWrists(pose, errThresh){
  * @param pose
  * @returns {boolean}
  */
-function wristsInwards(pose){
-    return pose.keypoints[RIGHT_WRIST].position.x > pose.keypoints[RIGHT_ELBOW].position.x &&
-        pose.keypoints[LEFT_WRIST].position.x < pose.keypoints[LEFT_ELBOW].position.x;
+function wristsInwards(pose) {
+  return pose.keypoints[RIGHT_WRIST].position.x > pose.keypoints[RIGHT_ELBOW].position.x &&
+      pose.keypoints[LEFT_WRIST].position.x < pose.keypoints[LEFT_ELBOW].position.x;
 }
 
 /**
@@ -398,23 +399,23 @@ function wristsInwards(pose){
  */
 
 function detectOm(pose) {
-    let eyes_dist = euclidDist(pose, LEFT_EYE, RIGHT_EYE);
-    if(elbowsAligned(pose, eyes_dist) && closeWrists(pose, 1.9*eyes_dist) && wristsInwards(pose)){
-        counter++;
-        if (counter === OM_SENSITIVITY) { // If we detected enough Oms, its probably not a noise.
-            counter = 0;
-            countdown = SLEEP_TIME; // Do not detect another pose for the next SLEEP_TIME iterations.
-            omsDetected++;
-            listeningTimeLeft = LISTENING_TIME;
-            if (omsDetected === 1) { // indicates delay
-                document.getElementById("playerStateIndicator").innerHTML = "Got it! \nJust a Sec...";
-                document.getElementById("playerStateIndicator").style.color = "#F7DFA3";
-                poseDetected = 10;
-            }
-            return true;
-        }
+  let eyes_dist = euclidDist(pose, LEFT_EYE, RIGHT_EYE);
+  if (elbowsAligned(pose, eyes_dist) && closeWrists(pose, 1.9 * eyes_dist) && wristsInwards(pose)) {
+    counter++;
+    if (counter === OM_SENSITIVITY) { // If we detected enough Oms, its probably not a noise.
+      counter = 0;
+      countdown = SLEEP_TIME; // Do not detect another pose for the next SLEEP_TIME iterations.
+      omsDetected++;
+      listeningTimeLeft = LISTENING_TIME;
+      if (omsDetected === 1) { // indicates delay
+        document.getElementById('playerStateIndicator').innerHTML = 'Got it! \nJust a Sec...';
+        document.getElementById('playerStateIndicator').style.color = '#F7DFA3';
+        poseDetected = 10;
+      }
+      return true;
     }
-    return false;
+  }
+  return false;
 }
 
 /**
@@ -422,8 +423,8 @@ function detectOm(pose) {
  * @param pose
  */
 function updateWristCoords(pose) {
-    lastWristX = pose.keypoints[RIGHT_WRIST].position.x;
-    lastWristY = pose.keypoints[RIGHT_WRIST].position.y;
+  lastWristX = pose.keypoints[RIGHT_WRIST].position.x;
+  lastWristY = pose.keypoints[RIGHT_WRIST].position.y;
 }
 
 
@@ -431,37 +432,36 @@ function updateWristCoords(pose) {
  * Records the wrist movements of the user and keeps them in the global array detectedDirections[].
  * @param pose
  */
-function recordWristMovement(pose){
-    if(checkScore(pose, RIGHT_WRIST, WRIST_THRESH) && checkScore(pose, RIGHT_EYE, EYE_THREASH)
-        && checkScore(pose, LEFT_EYE, EYE_THREASH)){
+function recordWristMovement(pose) {
+  if (checkScore(pose, RIGHT_WRIST, WRIST_THRESH) && checkScore(pose, RIGHT_EYE, EYE_THREASH)
+      && checkScore(pose, LEFT_EYE, EYE_THREASH)) {
 
-        let y_delta = pose.keypoints[RIGHT_WRIST].position.y - lastWristY;
-        let eyes_dist = euclidDist(pose, LEFT_EYE, RIGHT_EYE);
+    let y_delta = pose.keypoints[RIGHT_WRIST].position.y - lastWristY;
+    let eyes_dist = euclidDist(pose, LEFT_EYE, RIGHT_EYE);
 
-        if (y_delta >= 0.3*eyes_dist) {
-            if(downsDetected >= DOWNS_SENSITIVITY){
-                downsDetected = 0;
-            } else {
-                downsDetected ++;
-            }
-            decreaseVolume();
-            poseDetected = 10;
-            console.log("recordWristMovement: decrease volume");
-            console.log("recordWristMovement: volume: ", player.getVolume());
-        }
-        else if(y_delta <= -0.3*eyes_dist) {
-            if(upsDetected >= UPS_SENSITIVITY){
-                upsDetected = 0;
-            } else {
-                upsDetected ++;
-            }
-            raiseVolume();
-            poseDetected = 10;
-            console.log("recordWristMovement: ups detected: " + upsDetected);
-            console.log("recordWristMovement: raise volume");
-            console.log("recordWristMovement: volume: ", player.getVolume());
-        }
+    if (y_delta >= 0.3 * eyes_dist) {
+      if (downsDetected >= DOWNS_SENSITIVITY) {
+        downsDetected = 0;
+      } else {
+        downsDetected++;
+      }
+      decreaseVolume();
+      poseDetected = 10;
+      console.log('recordWristMovement: decrease volume');
+      console.log('recordWristMovement: volume: ', player.getVolume());
+    } else if (y_delta <= -0.3 * eyes_dist) {
+      if (upsDetected >= UPS_SENSITIVITY) {
+        upsDetected = 0;
+      } else {
+        upsDetected++;
+      }
+      raiseVolume();
+      poseDetected = 10;
+      console.log('recordWristMovement: ups detected: ' + upsDetected);
+      console.log('recordWristMovement: raise volume');
+      console.log('recordWristMovement: volume: ', player.getVolume());
     }
+  }
 }
 
 
@@ -470,69 +470,68 @@ function recordWristMovement(pose){
  * If the pose detected is indeed spacial, the function starts the action triggered by it.
  */
 function poseDetection() {
-    for (let i = 0; i < poses.length; i++) {
-        let pose = poses[i].pose;
+  for (let i = 0; i < poses.length; i++) {
+    let pose = poses[i].pose;
 
-        // Tests if the pose is valid:
-        if (!pose) {
-            continue;
-        }
-
-        // If we just detected a pose, the current pose is probably trash, so move on:
-        if (countdown > 0) {
-            countdown--;
-            if (omsDetected !== 0) {
-                listeningBar.set((1 - countdown/SLEEP_TIME)*100);
-            }
-            console.log("poseDetection: delaying");
-            return;
-        }
-        listeningBar.set(0);
-
-        // Waits for activation:
-        if (omsDetected === 0) {
-            console.log("poseDetection: Waits for activation");
-            detectOm(pose);
-        }
-        else {
-            // Indicates that the player is listening
-            document.getElementById("playerStateIndicator").innerHTML = "Listening";
-            document.getElementById("playerStateIndicator").style.color = "#F7DFA3";
-            // After activated, listens for the next command:
-            if (listeningTimeLeft > 0) {
-                if (detectOm(pose)) {
-                    playPauseVid();
-                    listeningTimeLeft = 0;
-                    downsDetected = 0;
-                    upsDetected = 0;
-                    counter = 0;
-                    omsDetected = 0; // two oms were detected - reset counter and wait for activation again.
-                    poseDetected = 10;
-
-                } else if (player.getPlayerState() === PLAYING){
-                    // Listens for circles:
-                    if (lastWristX !== -1 && lastWristY !== -1) {
-                        recordWristMovement(pose);
-                    }
-                    updateWristCoords(pose);
-                    listeningTimeLeft--;
-
-                } else {
-                    lastWristX = -1;
-                    lastWristY = -1;
-                    listeningTimeLeft--;
-                }
-            } else { // End of listening time.
-                omsDetected = 0;
-                downsDetected = 0;
-                upsDetected = 0;
-                counter = 0;
-                if (player.getPlayerState() !== PLAYING) {
-                    document.getElementById("playerStateIndicator").innerHTML = "Paused";
-                } else {
-                    document.getElementById("playerStateIndicator").innerHTML = "Playing";
-                }
-            }
-        }
+    // Tests if the pose is valid:
+    if (!pose) {
+      continue;
     }
+
+    // If we just detected a pose, the current pose is probably trash, so move on:
+    if (countdown > 0) {
+      countdown--;
+      if (omsDetected !== 0) {
+        listeningBar.set((1 - countdown / SLEEP_TIME) * 100);
+      }
+      console.log('poseDetection: delaying');
+      return;
+    }
+    listeningBar.set(0);
+
+    // Waits for activation:
+    if (omsDetected === 0) {
+      console.log('poseDetection: Waits for activation');
+      detectOm(pose);
+    } else {
+      // Indicates that the player is listening
+      document.getElementById('playerStateIndicator').innerHTML = 'Listening';
+      document.getElementById('playerStateIndicator').style.color = '#F7DFA3';
+      // After activated, listens for the next command:
+      if (listeningTimeLeft > 0) {
+        if (detectOm(pose)) {
+          playPauseVid();
+          listeningTimeLeft = 0;
+          downsDetected = 0;
+          upsDetected = 0;
+          counter = 0;
+          omsDetected = 0; // two oms were detected - reset counter and wait for activation again.
+          poseDetected = 10;
+
+        } else if (player.getPlayerState() === PLAYING) {
+          // Listens for circles:
+          if (lastWristX !== -1 && lastWristY !== -1) {
+            recordWristMovement(pose);
+          }
+          updateWristCoords(pose);
+          listeningTimeLeft--;
+
+        } else {
+          lastWristX = -1;
+          lastWristY = -1;
+          listeningTimeLeft--;
+        }
+      } else { // End of listening time.
+        omsDetected = 0;
+        downsDetected = 0;
+        upsDetected = 0;
+        counter = 0;
+        if (player.getPlayerState() !== PLAYING) {
+          document.getElementById('playerStateIndicator').innerHTML = 'Paused';
+        } else {
+          document.getElementById('playerStateIndicator').innerHTML = 'Playing';
+        }
+      }
+    }
+  }
 }
