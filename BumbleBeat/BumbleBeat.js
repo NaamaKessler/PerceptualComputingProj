@@ -158,7 +158,7 @@ function draw() {
  * @param pose
  */
 function keypointsHelper(pose) {
-  for (let j = 0; j < pose.keypoints.length; j++) {
+  for (let j = 0; j < pose.keypoints.length; j += 1) {
     // A keypoint is an object describing a body part (like rightArm or leftShoulder)
     let keypoint = pose.keypoints[j];
     // Only draw an ellipse is the pose probability is bigger than 0.2
@@ -201,7 +201,7 @@ function skeletonHelper(pose) {
   drawLine(pose, LEFT_SHOLDER, LEFT_HIP);
   drawLine(pose, RIGHT_HIP, LEFT_HIP);
   if (poseDetected > 0) {
-    poseDetected--;
+    poseDetected -= 1;
   }
 }
 
@@ -210,7 +210,7 @@ function skeletonHelper(pose) {
  */
 function drawKeypoints() {
   // Loop through all the poses detected
-  for (let i = 0; i < poses.length; i++) {
+  for (let i = 0; i < poses.length; i += 1) {
     let pose = poses[i].pose;
 
     if (!prevPose) { // Inits prevPose with the first valid pose:
@@ -290,7 +290,7 @@ function previousSong() {
   if (currentlyPlayingIdx === 0) {
     currentlyPlayingIdx = playlistIds.length - 1;
   } else {
-    currentlyPlayingIdx--;
+    currentlyPlayingIdx -= 1;
   }
   player.loadVideoById(playlistIds[currentlyPlayingIdx]);
   changeSongsMetaData();
@@ -401,11 +401,11 @@ function wristsInwards(pose) {
 function detectOm(pose) {
   let eyes_dist = euclidDist(pose, LEFT_EYE, RIGHT_EYE);
   if (elbowsAligned(pose, eyes_dist) && closeWrists(pose, 1.9 * eyes_dist) && wristsInwards(pose)) {
-    counter++;
+    counter += 1;
     if (counter === OM_SENSITIVITY) { // If we detected enough Oms, its probably not a noise.
       counter = 0;
       countdown = SLEEP_TIME; // Do not detect another pose for the next SLEEP_TIME iterations.
-      omsDetected++;
+      omsDetected += 1;
       listeningTimeLeft = LISTENING_TIME;
       if (omsDetected === 1) { // indicates delay
         document.getElementById('playerStateIndicator').innerHTML = 'Got it! \nJust a Sec...';
@@ -443,7 +443,7 @@ function recordWristMovement(pose) {
       if (downsDetected >= DOWNS_SENSITIVITY) {
         downsDetected = 0;
       } else {
-        downsDetected++;
+        downsDetected += 1;
       }
       decreaseVolume();
       poseDetected = 10;
@@ -453,7 +453,7 @@ function recordWristMovement(pose) {
       if (upsDetected >= UPS_SENSITIVITY) {
         upsDetected = 0;
       } else {
-        upsDetected++;
+        upsDetected += 1;
       }
       raiseVolume();
       poseDetected = 10;
@@ -470,7 +470,7 @@ function recordWristMovement(pose) {
  * If the pose detected is indeed spacial, the function starts the action triggered by it.
  */
 function poseDetection() {
-  for (let i = 0; i < poses.length; i++) {
+  for (let i = 0; i < poses.length; i += 1) {
     let pose = poses[i].pose;
 
     // Tests if the pose is valid:
@@ -480,7 +480,7 @@ function poseDetection() {
 
     // If we just detected a pose, the current pose is probably trash, so move on:
     if (countdown > 0) {
-      countdown--;
+      countdown -= 1;
       if (omsDetected !== 0) {
         listeningBar.set((1 - countdown / SLEEP_TIME) * 100);
       }
@@ -514,12 +514,12 @@ function poseDetection() {
             recordWristMovement(pose);
           }
           updateWristCoords(pose);
-          listeningTimeLeft--;
+          listeningTimeLeft -= 1;
 
         } else {
           lastWristX = -1;
           lastWristY = -1;
-          listeningTimeLeft--;
+          listeningTimeLeft -= 1;
         }
       } else { // End of listening time.
         omsDetected = 0;
