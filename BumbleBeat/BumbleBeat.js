@@ -222,12 +222,9 @@ function sameHeight(pose, keyPoint1, keyPoint2, errThresh) {
 
 /**
  * Returns true if the score of a key point is above the given threshold.
- * @param pose
- * @param keyPoint
- * @param threshold
  */
-function checkScore(pose, keyPoint, threshold) {
-  return pose.keypoints[keyPoint].score > threshold;
+function checkScore({confidence}, threshold) {
+  return confidence > threshold;
 }
 
 /**
@@ -237,7 +234,7 @@ function checkScore(pose, keyPoint, threshold) {
  * @returns {*}
  */
 function elbowsAligned(pose, errThresh) {
-  return checkScore(pose, LEFT_ELBOW, ELBOW_THRESH) && checkScore(pose, RIGHT_ELBOW, ELBOW_THRESH)
+  return checkScore(pose.leftElbow, ELBOW_THRESH) && checkScore(pose.rightElbow, ELBOW_THRESH)
       && sameHeight(pose, LEFT_ELBOW, RIGHT_ELBOW, errThresh);
 }
 
@@ -248,8 +245,8 @@ function elbowsAligned(pose, errThresh) {
  */
 function closeWrists(pose, errThresh) {
   const wristDist = euclidDist(pose, LEFT_WRIST, RIGHT_WRIST);
-  return checkScore(pose, LEFT_WRIST, WRIST_THRESH)
-      && checkScore(pose, RIGHT_WRIST, WRIST_THRESH) && wristDist < errThresh;
+  return checkScore(pose.leftWrist, WRIST_THRESH)
+      && checkScore(pose.rightWrist, WRIST_THRESH) && wristDist < errThresh;
 }
 
 /**
@@ -304,8 +301,8 @@ function updateWristCoords({ rightWrist }) {
  * @param pose
  */
 function recordWristMovement(pose) {
-  if (checkScore(pose, RIGHT_WRIST, WRIST_THRESH) && checkScore(pose, RIGHT_EYE, EYE_THRASH)
-      && checkScore(pose, LEFT_EYE, EYE_THRASH)) {
+  if (checkScore(pose.rightWrist, WRIST_THRESH) && checkScore(pose.rightEye, EYE_THRASH)
+      && checkScore(pose.leftEye, EYE_THRASH)) {
     const yDelta = pose.keypoints[RIGHT_WRIST].position.y - lastWristY;
     const eyesDist = euclidDist(pose, LEFT_EYE, RIGHT_EYE);
 
