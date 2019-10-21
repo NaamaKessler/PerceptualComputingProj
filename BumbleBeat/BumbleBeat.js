@@ -123,7 +123,7 @@ function setup() {
   });
 
   // Sets up an event that records the newly detected pose and detects it.
-  poseNet.on('pose', function(results){
+  poseNet.on('pose', function (results) {
     poses = results;
     respondToPose();
   });
@@ -137,32 +137,30 @@ function setup() {
  * Changes player's state to "PLAYING" if paused and vice-versa.
  */
 function playPauseVid() {
-  if(!player){
+  if (!player) {
     return;
   }
   const buttonId = document.getElementById('playPause');
   if (player.getPlayerState() === PLAYING) {
     player.pauseVideo();
-    console.log('playPauseVid: paused!');
     document.getElementById('playerStateIndicator').innerHTML = 'Paused';
     buttonId.src = 'icons\\play-button.png';
   } else {
     player.playVideo();
-    console.log('playPauseVid: playing!');
     document.getElementById('playerStateIndicator').innerHTML = 'Playing';
     buttonId.src = 'icons\\pause.png';
   }
 }
 
 function raiseVolume() {
-  if(!player){
+  if (!player) {
     return;
   }
   player.setVolume(player.getVolume() + 7);
 }
 
 function decreaseVolume() {
-  if(!player){
+  if (!player) {
     return;
   }
   player.setVolume(player.getVolume() - 7);
@@ -176,7 +174,7 @@ function changeSongsMetaData() {
 }
 
 function nextSong() {
-  if(!player){
+  if (!player) {
     return;
   }
   currentlyPlayingIdx = (currentlyPlayingIdx + 1) % playlistIds.length;
@@ -185,7 +183,7 @@ function nextSong() {
 }
 
 function previousSong() {
-  if(!player){
+  if (!player) {
     return;
   }
   if (currentlyPlayingIdx === 0) {
@@ -282,7 +280,7 @@ function detectOm(pose) {
       listeningTimeLeft = LISTENING_TIME;
       if (omsDetected === 1) { // indicates delay
         document.getElementById('playerStateIndicator')
-          .innerHTML = 'Got it! \nJust a Sec...';
+            .innerHTML = 'Got it! \nJust a Sec...';
         document.getElementById('playerStateIndicator').style.color = '#F7DFA3';
         iterationsToColorPose = ITERATIONS_TO_STAY_COLORED;
       }
@@ -331,14 +329,14 @@ function recordWristMovement(pose) {
   }
 }
 
-function resetListeningPeriod(){
+function resetListeningPeriod() {
   omsDetected = 0;
   downsDetected = 0;
   upsDetected = 0;
   poseCounter = 0;
 }
 
-function prepareForNewMovement(){
+function prepareForNewMovement() {
   resetListeningPeriod();
   listeningTimeLeft = 0;
   iterationsToColorPose = ITERATIONS_TO_STAY_COLORED;
@@ -350,7 +348,7 @@ function prepareForNewMovement(){
  */
 function respondToPose() {
   for (let i = 0; i < poses.length; i += 1) {
-    const { pose } = poses[i];
+    const {pose} = poses[i];
 
     if (!pose || !player) {
       continue;
@@ -361,7 +359,6 @@ function respondToPose() {
       if (omsDetected !== 0) {
         listeningBar.set((1 - iterationsToSleep / SLEEP_TIME) * 100);
       }
-      // console.log('respondToPose: delaying');
       return;
     }
     listeningBar.set(0);
@@ -454,30 +451,34 @@ function keypointsHelper(pose) {
 
 /**
  * Draws a line between two key points.
- * @param pose
- * @param kp1
- * @param kp2
  */
-function drawLine(pose, kp1, kp2) {
+function drawLine(poseKeyPoint1, poseKeyPoint2) {
   if (iterationsToColorPose > 0) {
     stroke(163, 247, 223);
   } else {
     stroke(247, 223, 163);
   }
 
-  line(pose.keypoints[kp1].position.x, pose.keypoints[kp1].position.y,
-    pose.keypoints[kp2].position.x, pose.keypoints[kp2].position.y);
+  line(
+      poseKeyPoint1.x,
+      poseKeyPoint1.y,
+      poseKeyPoint2.x,
+      poseKeyPoint2.y
+  );
 }
 
 function skeletonHelper(pose) {
-  drawLine(pose, LEFT_SHOULDER, RIGHT_SHOULDER);
-  drawLine(pose, LEFT_SHOULDER, LEFT_ELBOW);
-  drawLine(pose, LEFT_ELBOW, LEFT_WRIST);
-  drawLine(pose, RIGHT_SHOULDER, RIGHT_ELBOW);
-  drawLine(pose, RIGHT_ELBOW, RIGHT_WRIST);
-  drawLine(pose, RIGHT_SHOULDER, RIGHT_HIP);
-  drawLine(pose, LEFT_SHOULDER, LEFT_HIP);
-  drawLine(pose, RIGHT_HIP, LEFT_HIP);
+  ['left', 'right'].forEach(side => {
+    const [elbow, wrist, shoulder, hip] = ["Elbow", "Wrist", "Shoulder", "Hip"]
+        .map(joint => pose[side + joint]);
+
+    drawLine(shoulder, elbow);
+    drawLine(shoulder, hip);
+    drawLine(elbow, wrist);
+  });
+
+  drawLine(pose.rightShoulder, pose.leftShoulder);
+  drawLine(pose.rightHip, pose.leftHip);
   if (iterationsToColorPose > 0) {
     iterationsToColorPose -= 1;
   }
@@ -489,7 +490,7 @@ function skeletonHelper(pose) {
 function drawSkeleton() {
   // Loop through all the poses detected
   for (let i = 0; i < poses.length; i += 1) {
-    const { pose } = poses[i];
+    const {pose} = poses[i];
 
     if (!prevPose) { // Inits prevPose with the first valid pose:
       if (pose) {
