@@ -1,17 +1,34 @@
-// TODO: documentation
-// TODO: separate to multiple files.
-// TODO: volume funcs are unnecessary & add vol const
 // TODO: handle code structure
-// TODO: fix bugs
 // TODO: magic numbers / text where needed.
+// TODO: documentation
+// TODO: update README ("it's just a POC, some things are not working...")
+// TODO: check the html and css files look ok.
+// TODO: fix bugs: first play, next/prev song
+// TODO: separate to multiple files.
+// TODO: volume funcs are unnecessary
+
+/**ADD GENERAL DOCUMENTATION and explain about the class and the pose detection process in general
+ * . */
+
 
 // -----------------------MAGIC NUMBERS--------------------------//
-// Player's states
+// Skeleton display:
+const CANVAS_HEIGHT = 350;
+const CANVAS_WIDTH = 350;
+const CANVAS_R = 6;
+const CANVAS_G = 6;
+const CANVAS_B = 6;
+
+// Player:
+const PLAYER_HEIGHT = '0';
+const PLAYER_WIDTH = '0';
 const PLAYING = 1;
 
-// Init poseNet:
-const HEIGHT = 350;
-const WIDTH = 350;
+// PoseNet inputs:
+/** Affecting on the detection quality. For more details see:
+ * https://medium.com/tensorflow/real-time-human-pose-estimation-in-the-browser-with-tensorflow-js-7dd0bc881cd5*/
+const IMAGE_SCALE_FACTOR_VAL = 0.6;
+const OUTPUT_STRIDE_VAL = 8;
 
 // Key points
 const LEFT_SHOULDER = 5;
@@ -25,20 +42,18 @@ const RIGHT_HIP = 12;
 const RIGHT_EYE = 2;
 const LEFT_EYE = 1;
 
-// confidences:
+// Thresholds:
 const POSE_CONFIDENCE = 0.2;
-
-// Thresholds
 const WRIST_THRESH = 0.2;
 const ELBOW_THRESH = 0.2;
 const EYE_THRASH = 0.2;
 
 // Pose sensitivity:
-const SLEEP_TIME = 70; // Determines the number of poses we consider as 'junk' after a spacial pose was detected:
-const OM_SENSITIVITY = 10; // Determines how many Oms in a row we consider as a true Om (not noise):
-const LISTENING_TIME = 170; // Determines for how many iterations we listen to the user's commands after activation:
-const DOWNS_SENSITIVITY = 5;
-const UPS_SENSITIVITY = 5;
+const SLEEP_TIME = 15; // Determines the number of poses we consider as 'junk' after a spacial pose was detected:
+const OM_SENSITIVITY = 5; // Determines how many Oms in a row we consider as a true Om (not noise):
+const LISTENING_TIME = 35; // Determines for how many iterations we listen to the user's commands after activation:
+const DOWNS_SENSITIVITY = 10;
+const UPS_SENSITIVITY = 10;
 
 // -----------------------CONSTANTS--------------------------//
 // HTML related:
@@ -46,14 +61,14 @@ const listeningBar = new ldBar('#myItem1');
 const musicBar = new ldBar('#musicBar');
 const modal = document.getElementById('myModal');
 const guideButton = document.getElementById('guideButton');
-const span = document.getElementsByClassName('close')[0];
+const span = document.getElementsByClassName('close')[0];  // TODO: Awful name
 
 // Youtube API related:
 const tag = document.createElement('script');
 tag.src = 'https://www.youtube.com/iframe_api';
 const firstScriptTag = document.getElementsByTagName('script')[0];
 firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-const playlistIds = ['s3Q80mk7bxE', 'nqxVMLVe62U', '0fAQhSRLQnM', 'unfzfe8f9NI'];
+const playlistIds = ['s3Q80mk7bxE', 'nqxVMLVe62U', '0fAQhSRLQnM', 'unfzfe8f9NI'];  // TODO: Somewhat ugly.
 const albumsCoverPics = ['album_cover_pics/Diana_Ross_Presents_the_Jackson_5.jpg',
   'album_cover_pics/Jacksons-destiny.jpg', 'album_cover_pics/sultans-front-b.jpg',
   'album_cover_pics/Mamma_Mia_Intermezzo_No_1.jpg'];
@@ -63,8 +78,8 @@ const albumsNames = ['Diana Ross Presents the Jackson 5', 'Destiny', 'Sultans of
 
 // -----------------------GLOBALS--------------------------//
 // Pose detection:
-let counter = 0;
-let countdown = 0;
+let counter = 0;  // TODO: find a better name.
+let countdown = 0;  // TODO: find a better name
 let listeningTimeLeft = 0;
 let omsDetected = 0;
 let upsDetected = 0;
@@ -72,60 +87,60 @@ let downsDetected = 0;
 let lastWristX = -1;
 let lastWristY = -1;
 
-// Give pose feedback:
+// Skeleton related:
 let prevPose;
 let poseDetected = 0; // for skeleton color change when a pose is detected
 
-// Init PoseNet:
+// PoseNet initialization:
 let video;
 let poseNet;
-let poses = [];
+let poses = []; // TODO: Does it has to be here?
 
 // Youtube API related:
 let currentlyPlayingIdx = 0;
 let player;
 
-// ----------------------INIT YOUTUBE---------------------------//
+// ----------------------PAGE INITIALIZATION---------------------------//
 /**
- * This function creates an <iframe> (and YouTube poseDemo) after the API code downloads.
+ * Creates a Youtube player after the page had finished downloading the JS for the player API.
+ * The implementation of this function is mandatory. For more information, see:
+ * https://developers.google.com/youtube/iframe_api_reference.
  */
 function onYouTubeIframeAPIReady() {
   player = new YT.Player('player', {
-    height: '0',
-    width: '0',
+    height: PLAYER_HEIGHT,
+    width: PLAYER_WIDTH,
     videoId: playlistIds[currentlyPlayingIdx],
     events: {},
   });
 }
 
-// ---------------------INIT POSE NET------------------------------//
 /**
- * prints to the screen 'Model Loaded' when the model is ready.
- */
-function modelReady() {
-  select('#status').html('');
-}
-
-/**
- * Sets up the poseNet library:
+ * The setup() function initializes a canvas for the skeleton display, and sets up PoseNet.
+ * Setup() is a part of the p5.js library, and is called automatically when the program starts.
+ * You can read more about it here: https://p5js.org/reference/#/p5/setup.
  */
 function setup() {
-  const canvas = createCanvas(WIDTH, HEIGHT);
-  canvas.background(6, 6, 6);
+  // Initializes canvas:
+  const canvas = createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
+  canvas.background(CANVAS_R, CANVAS_G, CANVAS_B);
   canvas.parent('skeleton');
   video = createCapture(VIDEO);
-  video.size(WIDTH, HEIGHT);
+  video.size(CANVAS_WIDTH, CANVAS_HEIGHT);
 
-  // Create a new poseNet method with a single detection
+  // Creates a new poseNet method with a single detection:
   poseNet = ml5.poseNet(video, {
-    imageScaleFactor: 0.6,
-    outputStride: 8,
+    imageScaleFactor: IMAGE_SCALE_FACTOR_VAL,
+    outputStride: OUTPUT_STRIDE_VAL,
     detectionType: 'single',
-  }, modelReady);
-  // Sets up an event that insert poses[] a pose each time a new pose is detected:
-  poseNet.on('pose', (results) => {
-    poses = results;
   });
+
+  // Sets up an event that insert to poses[] a pose each time a new pose is detected:
+  poseNet.on('pose', function(results){
+    poses = results;
+    poseDetection();
+  });
+
   // Hides the video element (to show the canvas only):
   video.hide();
 }
@@ -169,25 +184,23 @@ function playPauseVid() {
   const buttonId = document.getElementById('playPause');
   if (player.getPlayerState() === PLAYING) {
     player.pauseVideo();
-    // console.log('playPauseVid: paused!');
+    console.log('playPauseVid: paused!');
     document.getElementById('playerStateIndicator').innerHTML = 'Paused';
     buttonId.src = 'icons\\play-button.png';
   } else {
     player.playVideo();
-    // console.log('playPauseVid: playing!');
+    console.log('playPauseVid: playing!');
     document.getElementById('playerStateIndicator').innerHTML = 'Playing';
     buttonId.src = 'icons\\pause.png';
   }
 }
 
 function raiseVolume() {
-  const currVolume = player.getVolume() + 7;
-  player.setVolume(currVolume);
+  player.setVolume(player.getVolume() + 7);
 }
 
 function decreaseVolume() {
-  const currVolume = player.getVolume() - 7;
-  player.setVolume(currVolume);
+  player.setVolume(player.getVolume() - 7);
 }
 
 function changeSongsMetaData() {
@@ -335,8 +348,8 @@ function recordWristMovement(pose) {
       }
       decreaseVolume();
       poseDetected = 10;
-      // console.log('recordWristMovement: decrease volume');
-      // console.log('recordWristMovement: volume: ', player.getVolume());
+      console.log('recordWristMovement: decrease volume');
+      console.log('recordWristMovement: volume: ', player.getVolume());
     } else if (yDelta <= -0.3 * eyesDist) {
       if (upsDetected >= UPS_SENSITIVITY) {
         upsDetected = 0;
@@ -421,7 +434,7 @@ function poseDetection() {
   }
 }
 
-// --------------------------GIVE POSE FEEDBACK----------------------------//
+// --------------------------DRAW SKELETON----------------------------//
 /**
  * Draws the actual key points
  * @param pose
@@ -476,7 +489,7 @@ function skeletonHelper(pose) {
 /**
  * A function to draw ellipses over the detected key points.
  */
-function drawKeypoints() {
+function drawSkeleton() {
   // Loop through all the poses detected
   for (let i = 0; i < poses.length; i += 1) {
     const { pose } = poses[i];
@@ -508,12 +521,12 @@ function drawKeypoints() {
 }
 
 /**
- * Draws the skeleton and key points of each pose when detected.
+ * Draws the skeleton animation. Called automatically after setup is executed.
  */
 function draw() {
-  image(video, 0, 0, WIDTH, HEIGHT);
+  image(video, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT); // TODO: Magic
   background(24, 23, 23);
-  updatePlayerProgress();
-  drawKeypoints();
-  poseDetection();
+  updatePlayerProgress(); // TODO: UNRELATED
+  drawSkeleton();
+  // poseDetection();        // TODO: UNRELATED
 }
