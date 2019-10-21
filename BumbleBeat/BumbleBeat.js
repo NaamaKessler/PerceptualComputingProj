@@ -294,9 +294,9 @@ function detectOm(pose) {
  * Updates the last position of the right wrist.
  * @param pose
  */
-function updateWristCoords(pose) {
-  lastWristX = pose.keypoints[RIGHT_WRIST].position.x;
-  lastWristY = pose.keypoints[RIGHT_WRIST].position.y;
+function updateWristCoords({ rightWrist }) {
+  lastWristX = rightWrist.x;
+  lastWristY = rightWrist.y;
 }
 
 /**
@@ -350,9 +350,8 @@ function respondToPose() {
   for (let i = 0; i < poses.length; i += 1) {
     const {pose} = poses[i];
 
-    if (!pose || !player) {
-      continue;
-    }
+    if (!pose || !player) continue;
+
     // If we just detected a pose, the current pose is probably trash, so move on:
     if (iterationsToSleep > 0) {
       iterationsToSleep -= 1;
