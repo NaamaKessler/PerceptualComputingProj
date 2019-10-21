@@ -5,30 +5,17 @@
 // TODO: check the html and css files look ok.
 // TODO: fix bugs: first play, next/prev song
 // TODO: separate to multiple files.
-// TODO: volume funcs are unnecessary
-
-/**ADD GENERAL DOCUMENTATION and explain about the class and the pose detection process in general
- * . */
-
 
 // -----------------------MAGIC NUMBERS--------------------------//
 // Skeleton display:
 const CANVAS_HEIGHT = 350;
 const CANVAS_WIDTH = 350;
-const CANVAS_R = 6;
-const CANVAS_G = 6;
-const CANVAS_B = 6;
+const ITERATIONS_TO_STAY_COLORED = 10;
 
 // Player:
 const PLAYER_HEIGHT = '0';
 const PLAYER_WIDTH = '0';
 const PLAYING = 1;
-
-// PoseNet inputs:
-/** Affecting on the detection quality. For more details see:
- * https://medium.com/tensorflow/real-time-human-pose-estimation-in-the-browser-with-tensorflow-js-7dd0bc881cd5*/
-const IMAGE_SCALE_FACTOR_VAL = 0.6;
-const OUTPUT_STRIDE_VAL = 8;
 
 // Key points
 const LEFT_SHOULDER = 5;
@@ -78,8 +65,8 @@ const albumsNames = ['Diana Ross Presents the Jackson 5', 'Destiny', 'Sultans of
 
 // -----------------------GLOBALS--------------------------//
 // Pose detection:
-let counter = 0;  // TODO: find a better name.
-let countdown = 0;  // TODO: find a better name
+let poseCounter = 0;
+let iterationsToSleep = 0;  // TODO: find a better name
 let listeningTimeLeft = 0;
 let omsDetected = 0;
 let upsDetected = 0;
@@ -89,12 +76,12 @@ let lastWristY = -1;
 
 // Skeleton related:
 let prevPose;
-let poseDetected = 0; // for skeleton color change when a pose is detected
+let iterationsToColorPose = 0; // for skeleton color change when a pose is detected.
 
 // PoseNet initialization:
 let video;
 let poseNet;
-let poses = []; // TODO: Does it has to be here?
+let poses = [];
 
 // Youtube API related:
 let currentlyPlayingIdx = 0;
@@ -123,64 +110,36 @@ function onYouTubeIframeAPIReady() {
 function setup() {
   // Initializes canvas:
   const canvas = createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
-  canvas.background(CANVAS_R, CANVAS_G, CANVAS_B);
+  canvas.background(6, 6, 6);
   canvas.parent('skeleton');
   video = createCapture(VIDEO);
   video.size(CANVAS_WIDTH, CANVAS_HEIGHT);
 
   // Creates a new poseNet method with a single detection:
   poseNet = ml5.poseNet(video, {
-    imageScaleFactor: IMAGE_SCALE_FACTOR_VAL,
-    outputStride: OUTPUT_STRIDE_VAL,
+    imageScaleFactor: 0.6,
+    outputStride: 8,
     detectionType: 'single',
   });
 
-  // Sets up an event that insert to poses[] a pose each time a new pose is detected:
+  // Sets up an event that records the newly detected pose and detects it.
   poseNet.on('pose', function(results){
     poses = results;
-    poseDetection();
+    respondToPose();
   });
 
   // Hides the video element (to show the canvas only):
   video.hide();
 }
 
-// -----------------------HTML related------------------------//
-guideButton.onclick = function loadGuid() {
-  modal.style.display = 'block';
-};
-// When the user clicks on <span> (x), close the modal
-span.onclick = function closeGuide() {
-  modal.style.display = 'none';
-};
-
-function updatePlayerProgress() {
-  const curr = !player.getCurrentTime ? 0.0 : player.getCurrentTime();
-  const total = !player.getDuration ? 0.0 : player.getDuration();
-  musicBar.set((curr / total) * 100);
-  const totalMinutes = Math.floor(total / 60).toString();
-  const totalSec = Math.floor(total - totalMinutes * 60).toString();
-  const currMinutes = Math.floor(curr / 60).toString();
-  const currSec = Math.floor(curr - currMinutes * 60).toString();
-  if (player.getPlayerState() === PLAYING && currSec >= 0) {
-    if (currSec < 10) {
-      document.getElementById('currTime').innerHTML = `${currMinutes}:0${currSec}`;
-    } else {
-      document.getElementById('currTime').innerHTML = `${currMinutes}:${currSec}`;
-    }
-    if (totalSec < 10) {
-      document.getElementById('totalTime').innerHTML = `${totalMinutes}:0${totalSec}`;
-    } else {
-      document.getElementById('totalTime').innerHTML = `${totalMinutes}:${totalSec}`;
-    }
-  }
-}
-
 // ----------------------------PLAYER CONTROL-----------------------------//
 /**
- * Called when the play-pause button is clicked.
+ * Changes player's state to "PLAYING" if paused and vice-versa.
  */
 function playPauseVid() {
+  if(!player){
+    return;
+  }
   const buttonId = document.getElementById('playPause');
   if (player.getPlayerState() === PLAYING) {
     player.pauseVideo();
@@ -196,10 +155,16 @@ function playPauseVid() {
 }
 
 function raiseVolume() {
+  if(!player){
+    return;
+  }
   player.setVolume(player.getVolume() + 7);
 }
 
 function decreaseVolume() {
+  if(!player){
+    return;
+  }
   player.setVolume(player.getVolume() - 7);
 }
 
@@ -211,12 +176,18 @@ function changeSongsMetaData() {
 }
 
 function nextSong() {
+  if(!player){
+    return;
+  }
   currentlyPlayingIdx = (currentlyPlayingIdx + 1) % playlistIds.length;
   player.loadVideoById(playlistIds[currentlyPlayingIdx]);
   changeSongsMetaData();
 }
 
 function previousSong() {
+  if(!player){
+    return;
+  }
   if (currentlyPlayingIdx === 0) {
     currentlyPlayingIdx = playlistIds.length - 1;
   } else {
@@ -298,22 +269,22 @@ function wristsInwards(pose) {
  * @param pose
  * @returns {boolean}
  */
-
+// TODO: dont be lame, comment Om.
 function detectOm(pose) {
   const eyesDist = euclidDist(pose, LEFT_EYE, RIGHT_EYE);
   if (elbowsAligned(pose, eyesDist) && closeWrists(pose, 1.9 * eyesDist)
       && wristsInwards(pose)) {
-    counter += 1;
-    if (counter === OM_SENSITIVITY) { // If we detected enough Oms, its probably not a noise.
-      counter = 0;
-      countdown = SLEEP_TIME; // Do not detect another pose for the next SLEEP_TIME iterations.
+    poseCounter += 1;
+    if (poseCounter === OM_SENSITIVITY) { // If we detected enough Oms, its probably not a noise.
+      poseCounter = 0;
+      iterationsToSleep = SLEEP_TIME; // Do not detect another pose for the next SLEEP_TIME iterations.
       omsDetected += 1;
       listeningTimeLeft = LISTENING_TIME;
       if (omsDetected === 1) { // indicates delay
         document.getElementById('playerStateIndicator')
           .innerHTML = 'Got it! \nJust a Sec...';
         document.getElementById('playerStateIndicator').style.color = '#F7DFA3';
-        poseDetected = 10;
+        iterationsToColorPose = ITERATIONS_TO_STAY_COLORED;
       }
       return true;
     }
@@ -347,9 +318,7 @@ function recordWristMovement(pose) {
         downsDetected += 1;
       }
       decreaseVolume();
-      poseDetected = 10;
-      console.log('recordWristMovement: decrease volume');
-      console.log('recordWristMovement: volume: ', player.getVolume());
+      iterationsToColorPose = ITERATIONS_TO_STAY_COLORED;
     } else if (yDelta <= -0.3 * eyesDist) {
       if (upsDetected >= UPS_SENSITIVITY) {
         upsDetected = 0;
@@ -357,41 +326,48 @@ function recordWristMovement(pose) {
         upsDetected += 1;
       }
       raiseVolume();
-      poseDetected = 10;
-      // console.log(`recordWristMovement: ups detected: ${upsDetected}`);
-      // console.log('recordWristMovement: raise volume');
-      // console.log('recordWristMovement: volume: ', player.getVolume());
+      iterationsToColorPose = ITERATIONS_TO_STAY_COLORED;
     }
   }
+}
+
+function resetListeningPeriod(){
+  omsDetected = 0;
+  downsDetected = 0;
+  upsDetected = 0;
+  poseCounter = 0;
+}
+
+function prepareForNewMovement(){
+  resetListeningPeriod();
+  listeningTimeLeft = 0;
+  iterationsToColorPose = ITERATIONS_TO_STAY_COLORED;
 }
 
 /**
  * This function inspects the current pose and checks if its a spacial pose.
  * If the pose detected is indeed spacial, the function starts the action triggered by it.
  */
-function poseDetection() {
+function respondToPose() {
   for (let i = 0; i < poses.length; i += 1) {
     const { pose } = poses[i];
 
-    // Tests if the pose is valid:
-    if (!pose) {
+    if (!pose || !player) {
       continue;
     }
-
     // If we just detected a pose, the current pose is probably trash, so move on:
-    if (countdown > 0) {
-      countdown -= 1;
+    if (iterationsToSleep > 0) {
+      iterationsToSleep -= 1;
       if (omsDetected !== 0) {
-        listeningBar.set((1 - countdown / SLEEP_TIME) * 100);
+        listeningBar.set((1 - iterationsToSleep / SLEEP_TIME) * 100);
       }
-      // console.log('poseDetection: delaying');
+      // console.log('respondToPose: delaying');
       return;
     }
     listeningBar.set(0);
 
     // Waits for activation:
     if (omsDetected === 0) {
-      // console.log('poseDetection: Waits for activation');
       detectOm(pose);
     } else {
       // Indicates that the player is listening
@@ -401,14 +377,8 @@ function poseDetection() {
       if (listeningTimeLeft > 0) {
         if (detectOm(pose)) {
           playPauseVid();
-          listeningTimeLeft = 0;
-          downsDetected = 0;
-          upsDetected = 0;
-          counter = 0;
-          omsDetected = 0; // two oms were detected - reset counter and wait for activation again.
-          poseDetected = 10;
+          prepareForNewMovement();
         } else if (player.getPlayerState() === PLAYING) {
-          // Listens for circles:
           if (lastWristX !== -1 && lastWristY !== -1) {
             recordWristMovement(pose);
           }
@@ -420,10 +390,7 @@ function poseDetection() {
           listeningTimeLeft -= 1;
         }
       } else { // End of listening time.
-        omsDetected = 0;
-        downsDetected = 0;
-        upsDetected = 0;
-        counter = 0;
+        resetListeningPeriod();
         if (player.getPlayerState() !== PLAYING) {
           document.getElementById('playerStateIndicator').innerHTML = 'Paused';
         } else {
@@ -434,7 +401,37 @@ function poseDetection() {
   }
 }
 
-// --------------------------DRAW SKELETON----------------------------//
+// --------------------------ANIMATIONS----------------------------//
+guideButton.onclick = function loadGuid() {
+  modal.style.display = 'block';
+};
+// When the user clicks on <span> (x), close the modal
+span.onclick = function closeGuide() {
+  modal.style.display = 'none';
+};
+
+function updatePlayerProgress() {
+  const curr = !player ? 0.0 : player.getCurrentTime();
+  const total = !player ? 0.0 : player.getDuration();
+  musicBar.set((curr / total) * 100);
+  const totalMinutes = Math.floor(total / 60).toString();
+  const totalSec = Math.floor(total - totalMinutes * 60).toString();
+  const currMinutes = Math.floor(curr / 60).toString();
+  const currSec = Math.floor(curr - currMinutes * 60).toString();
+  if (player.getPlayerState() === PLAYING && currSec >= 0) {
+    if (currSec < 10) {
+      document.getElementById('currTime').innerHTML = `${currMinutes}:0${currSec}`;
+    } else {
+      document.getElementById('currTime').innerHTML = `${currMinutes}:${currSec}`;
+    }
+    if (totalSec < 10) {
+      document.getElementById('totalTime').innerHTML = `${totalMinutes}:0${totalSec}`;
+    } else {
+      document.getElementById('totalTime').innerHTML = `${totalMinutes}:${totalSec}`;
+    }
+  }
+}
+
 /**
  * Draws the actual key points
  * @param pose
@@ -445,7 +442,7 @@ function keypointsHelper(pose) {
     const keypoint = pose.keypoints[j];
     // Only draw an ellipse if the pose probability is bigger than 0.2
     if (keypoint.score > 0.2) {
-      if (poseDetected > 0) {
+      if (iterationsToColorPose > 0) {
         fill(163, 247, 223);
       } else {
         fill(247, 223, 163);
@@ -462,7 +459,7 @@ function keypointsHelper(pose) {
  * @param kp2
  */
 function drawLine(pose, kp1, kp2) {
-  if (poseDetected > 0) {
+  if (iterationsToColorPose > 0) {
     stroke(163, 247, 223);
   } else {
     stroke(247, 223, 163);
@@ -481,8 +478,8 @@ function skeletonHelper(pose) {
   drawLine(pose, RIGHT_SHOULDER, RIGHT_HIP);
   drawLine(pose, LEFT_SHOULDER, LEFT_HIP);
   drawLine(pose, RIGHT_HIP, LEFT_HIP);
-  if (poseDetected > 0) {
-    poseDetected -= 1;
+  if (iterationsToColorPose > 0) {
+    iterationsToColorPose -= 1;
   }
 }
 
@@ -521,12 +518,11 @@ function drawSkeleton() {
 }
 
 /**
- * Draws the skeleton animation. Called automatically after setup is executed.
+ * Draws the page animations. Called automatically after setup is executed.
  */
 function draw() {
-  image(video, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT); // TODO: Magic
+  image(video, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   background(24, 23, 23);
-  updatePlayerProgress(); // TODO: UNRELATED
   drawSkeleton();
-  // poseDetection();        // TODO: UNRELATED
+  updatePlayerProgress();
 }
