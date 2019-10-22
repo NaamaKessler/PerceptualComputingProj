@@ -1,8 +1,3 @@
-
-/*header {*/
-/*    background-color: #181717;*/
-/*}*/
-
 html, body, .viewport {
     width: 100%;
     height: 100%;
@@ -22,7 +17,6 @@ html, body, .viewport {
     display: flex;
     flex-direction: column;
     background-color: #181717;
-    /*width: 20%;*/
     width: 30%;
     min-height: 100%;
 }
@@ -32,7 +26,7 @@ html, body, .viewport {
     flex-direction: column;
     justify-content: space-around;
     align-items: center;
-    font-family: calibri;
+    font-family: calibri, serif;
     font-size: 30px;
 
 }
@@ -60,7 +54,7 @@ html, body, .viewport {
     margin:auto;
     padding-top:70px;
     font-size: x-large;
-    font-family: calibri;
+    font-family: calibri, serif;
 }
 
 #songDetails {
@@ -84,21 +78,21 @@ html, body, .viewport {
     flex-flow: row wrap;
     justify-content: center;
     align-items: center;
-    padding: 5px 0px 22px 0px;
+    padding: 5px 0 22px 0;
 
 }
 
 #playerSongProgressBar{
     color: #F4F3BE;
     display: flex;
-    font-family: calibri;
+    font-family: calibri, serif;
     font-size: 20px;
     margin:auto;
     justify-content: center;
 }
 
 #volumeControl{
-    width: 0px;
+    width: 0;
 }
 
 #playBackForward{

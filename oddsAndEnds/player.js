@@ -322,7 +322,7 @@ function poseDetection() {
                         pauseVid();
                     }
                     listeningTimeLeft = 0;
-                    omsDetected = 0; // two oms were detected - reset counter and wait for activation again.
+                    omsDetected = 0; // two oms were detected - reset poseCounter and wait for activation again.
                 } else if (player.getPlayerState() === PLAYING){
                     // Listens for circles:
                     recordWristMovement(pose);
