@@ -1,46 +1,38 @@
-// TODO: handle code structure
 // TODO: magic numbers / text where needed.
-// TODO: documentation
 // TODO: update README ("it's just a POC, some things are not working...")
-// TODO: check the html and css files look ok.
 // TODO: fix bugs: first play, next/prev song
-// TODO: separate to multiple files.
 
 // -----------------------MAGIC NUMBERS--------------------------//
 // Skeleton display:
 const CANVAS_HEIGHT = 350;
 const CANVAS_WIDTH = 350;
+const KEYPOINT_HEIGHT = 10;
+const KEYPOINT_WIDTH = 10;
 const ITERATIONS_TO_STAY_COLORED = 10;
 
 // Player:
 const PLAYER_HEIGHT = '0';
 const PLAYER_WIDTH = '0';
 const PLAYING = 1;
-
-// Key points
-const LEFT_SHOULDER = 5;
-const RIGHT_SHOULDER = 6;
-const LEFT_ELBOW = 7;
-const RIGHT_ELBOW = 8;
-const LEFT_WRIST = 9;
-const RIGHT_WRIST = 10;
-const LEFT_HIP = 11;
-const RIGHT_HIP = 12;
-const RIGHT_EYE = 2;
-const LEFT_EYE = 1;
+const VOLUME_CHANGE = 7;
 
 // Thresholds:
 const POSE_CONFIDENCE = 0.2;
+const KEYPOINT_CONFIDENCE = 0.2;
 const WRIST_THRESH = 0.2;
 const ELBOW_THRESH = 0.2;
 const EYE_THRASH = 0.2;
 
 // Pose sensitivity:
-const SLEEP_TIME = 15; // Determines the number of poses we consider as 'junk' after a spacial pose was detected:
-const OM_SENSITIVITY = 5; // Determines how many Oms in a row we consider as a true Om (not noise):
-const LISTENING_TIME = 35; // Determines for how many iterations we listen to the user's commands after activation:
+const SLEEP_TIME = 15; // Determines the number of poses we consider as 'junk' after a spacial pose was detected
+const OM_SENSITIVITY = 5; // Determines how many Oms in a row we consider as a true Om (not noise)
+const LISTENING_TIME = 35; // Determines for how many iterations we listen to the user's commands after activation
 const DOWNS_SENSITIVITY = 10;
 const UPS_SENSITIVITY = 10;
+
+// Distance factors:
+const WRIST_DIST_FACTOR  =1.9;
+const VERTICAL_CHANGE_FACTOR = 0.3;
 
 // -----------------------CONSTANTS--------------------------//
 // HTML related:
@@ -48,14 +40,15 @@ const listeningBar = new ldBar('#myItem1');
 const musicBar = new ldBar('#musicBar');
 const modal = document.getElementById('myModal');
 const guideButton = document.getElementById('guideButton');
-const span = document.getElementsByClassName('close')[0];  // TODO: Awful name
+const guideSpan = document.getElementsByClassName('close')[0];
 
 // Youtube API related:
 const tag = document.createElement('script');
 tag.src = 'https://www.youtube.com/iframe_api';
 const firstScriptTag = document.getElementsByTagName('script')[0];
 firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-const playlistIds = ['s3Q80mk7bxE', 'nqxVMLVe62U', '0fAQhSRLQnM', 'unfzfe8f9NI'];  // TODO: Somewhat ugly.
+// Currently we have just some hard-coded songs for POC:
+const playlistIds = ['s3Q80mk7bxE', 'nqxVMLVe62U', '0fAQhSRLQnM', 'unfzfe8f9NI'];
 const albumsCoverPics = ['album_cover_pics/Diana_Ross_Presents_the_Jackson_5.jpg',
   'album_cover_pics/Jacksons-destiny.jpg', 'album_cover_pics/sultans-front-b.jpg',
   'album_cover_pics/Mamma_Mia_Intermezzo_No_1.jpg'];
@@ -66,12 +59,12 @@ const albumsNames = ['Diana Ross Presents the Jackson 5', 'Destiny', 'Sultans of
 // -----------------------GLOBALS--------------------------//
 // Pose detection:
 let poseCounter = 0;
-let iterationsToSleep = 0;  // TODO: find a better name
+let iterationsToSleep = 0;
 let listeningTimeLeft = 0;
 let omsDetected = 0;
 let upsDetected = 0;
 let downsDetected = 0;
-let lastWristX = -1;
+let lastWristX = -1; // TODO: ask J  if it's awful
 let lastWristY = -1;
 
 // Skeleton related:
@@ -105,7 +98,8 @@ function onYouTubeIframeAPIReady() {
 /**
  * The setup() function initializes a canvas for the skeleton display, and sets up PoseNet.
  * Setup() is a part of the p5.js library, and is called automatically when the program starts.
- * You can read more about it here: https://p5js.org/reference/#/p5/setup.
+ * For more information see: https://p5js.org/reference/#/p5/setup.
+ * After setup() had finished, the function draw() is called automatically.
  */
 function setup() {
   // Initializes canvas:
@@ -122,8 +116,8 @@ function setup() {
     detectionType: 'single',
   });
 
-  // Sets up an event that records the newly detected pose and detects it.
-  poseNet.on('pose', function (results) {
+  // Sets up an event that records the newly detected pose and responds to it:
+  poseNet.on('pose', (results) => {
     poses = results;
     respondToPose();
   });
@@ -133,6 +127,11 @@ function setup() {
 }
 
 // ----------------------------PLAYER CONTROL-----------------------------//
+function changePlayerState(newState){
+  document.getElementById('playerStateIndicator').innerHTML = newState;
+  document.getElementById('playerStateIndicator').style.color = '#F7DFA3';
+}
+
 /**
  * Changes player's state to "PLAYING" if paused and vice-versa.
  */
@@ -143,11 +142,11 @@ function playPauseVid() {
   const buttonId = document.getElementById('playPause');
   if (player.getPlayerState() === PLAYING) {
     player.pauseVideo();
-    document.getElementById('playerStateIndicator').innerHTML = 'Paused';
+    changePlayerState('Paused');
     buttonId.src = 'icons\\play-button.png';
   } else {
     player.playVideo();
-    document.getElementById('playerStateIndicator').innerHTML = 'Playing';
+    changePlayerState('Playing');
     buttonId.src = 'icons\\pause.png';
   }
 }
@@ -156,14 +155,14 @@ function raiseVolume() {
   if (!player) {
     return;
   }
-  player.setVolume(player.getVolume() + 7);
+  player.setVolume(player.getVolume() + VOLUME_CHANGE);
 }
 
 function decreaseVolume() {
   if (!player) {
     return;
   }
-  player.setVolume(player.getVolume() - 7);
+  player.setVolume(player.getVolume() - VOLUME_CHANGE);
 }
 
 function changeSongsMetaData() {
@@ -198,76 +197,58 @@ function previousSong() {
 // ----------------------------POSE DETECTION--------------------------------//
 /**
  * Calculates the Euclidean distance between two key points in a pose object.
- * @param pose
- * @param keyPoint1
- * @param keyPoint2
  */
-function euclidDist(pose, keyPoint1, keyPoint2) {
-  return Math.sqrt(((pose.keypoints[keyPoint1].position.y
-      - pose.keypoints[keyPoint2].position.y) ** 2) + ((pose.keypoints[keyPoint1].position.x
-      - pose.keypoints[keyPoint2].position.x) ** 2));
+function euclidDist(keyPoint1, keyPoint2) {
+  return Math.sqrt(((keyPoint1.y - keyPoint2.y) ** 2)
+      + ((keyPoint1.x - keyPoint2.x) ** 2));
 }
 
 /**
  * Tests if two key points are in the same height.
- * @param pose
- * @param keyPoint1
- * @param keyPoint2
- * @param errThresh
  */
-function sameHeight(pose, keyPoint1, keyPoint2, errThresh) {
-  return Math.abs(pose.keypoints[keyPoint1].position.y
-      - pose.keypoints[keyPoint2].position.y) < errThresh;
+function sameHeight(keyPoint1, keyPoint2, errThresh) {
+  return Math.abs(keyPoint1.y - keyPoint2.y) < errThresh;
 }
 
 /**
  * Returns true if the score of a key point is above the given threshold.
  */
-function checkScore({confidence}, threshold) {
+function checkScore({ confidence }, threshold) {
   return confidence > threshold;
 }
 
 /**
  * Tests if the elbows were detected with high confidence and have in the same height.
- * @param pose
- * @param errThresh
- * @returns {*}
  */
-function elbowsAligned(pose, errThresh) {
-  return checkScore(pose.leftElbow, ELBOW_THRESH) && checkScore(pose.rightElbow, ELBOW_THRESH)
-      && sameHeight(pose, LEFT_ELBOW, RIGHT_ELBOW, errThresh);
+function elbowsAligned({ leftElbow, rightElbow }, errThresh) {
+  return checkScore(leftElbow, ELBOW_THRESH) && checkScore(rightElbow, ELBOW_THRESH)
+      && sameHeight(leftElbow, rightElbow, errThresh);
 }
 
 /**
  * Tests if the waists were detected with high confidence, and if they are close.
- * @param pose
- * @param errThresh
  */
-function closeWrists(pose, errThresh) {
-  const wristDist = euclidDist(pose, LEFT_WRIST, RIGHT_WRIST);
-  return checkScore(pose.leftWrist, WRIST_THRESH)
-      && checkScore(pose.rightWrist, WRIST_THRESH) && wristDist < errThresh;
+function closeWrists({ leftWrist, rightWrist }, errThresh) {
+  const wristDist = euclidDist(leftWrist, rightWrist);
+  return checkScore(leftWrist, WRIST_THRESH)
+      && checkScore(rightWrist, WRIST_THRESH) && wristDist < errThresh;
 }
 
 /**
  * Tests if the wrists are inner compared to the elbows.
- * @param pose
- * @returns {boolean}
  */
-function wristsInwards(pose) {
-  return pose.keypoints[RIGHT_WRIST].position.x > pose.keypoints[RIGHT_ELBOW].position.x
-      && pose.keypoints[LEFT_WRIST].position.x < pose.keypoints[LEFT_ELBOW].position.x;
+function wristsInwards({
+  rightWrist, leftWrist, rightElbow, leftElbow,
+}) {
+  return rightWrist.x > rightElbow.x && leftWrist.x < leftElbow.x;
 }
 
 /**
  * Tests if the pose is the Om pose.
- * @param pose
- * @returns {boolean}
  */
-// TODO: dont be lame, comment Om.
-function detectOm(pose) {
-  const eyesDist = euclidDist(pose, LEFT_EYE, RIGHT_EYE);
-  if (elbowsAligned(pose, eyesDist) && closeWrists(pose, 1.9 * eyesDist)
+function detectOm(pose) { // Om is the name we gave the main gesture: a kind of a hand clapping.
+  const eyesDist = euclidDist(pose.leftEye, pose.rightEye);
+  if (elbowsAligned(pose, eyesDist) && closeWrists(pose, WRIST_DIST_FACTOR * eyesDist)
       && wristsInwards(pose)) {
     poseCounter += 1;
     if (poseCounter === OM_SENSITIVITY) { // If we detected enough Oms, its probably not a noise.
@@ -276,9 +257,7 @@ function detectOm(pose) {
       omsDetected += 1;
       listeningTimeLeft = LISTENING_TIME;
       if (omsDetected === 1) { // indicates delay
-        document.getElementById('playerStateIndicator')
-            .innerHTML = 'Got it! \nJust a Sec...';
-        document.getElementById('playerStateIndicator').style.color = '#F7DFA3';
+        changePlayerState('Got it! \nJust a Sec...');
         iterationsToColorPose = ITERATIONS_TO_STAY_COLORED;
       }
       return true;
@@ -289,7 +268,6 @@ function detectOm(pose) {
 
 /**
  * Updates the last position of the right wrist.
- * @param pose
  */
 function updateWristCoords({ rightWrist }) {
   lastWristX = rightWrist.x;
@@ -298,15 +276,14 @@ function updateWristCoords({ rightWrist }) {
 
 /**
  * Records the wrist movements of the user and keeps them in the global array detectedDirections[].
- * @param pose
  */
-function recordWristMovement(pose) {
-  if (checkScore(pose.rightWrist, WRIST_THRESH) && checkScore(pose.rightEye, EYE_THRASH)
-      && checkScore(pose.leftEye, EYE_THRASH)) {
-    const yDelta = pose.keypoints[RIGHT_WRIST].position.y - lastWristY;
-    const eyesDist = euclidDist(pose, LEFT_EYE, RIGHT_EYE);
+function recordWristMovement({ rightWrist, leftEye, rightEye }) {
+  if (checkScore(rightWrist, WRIST_THRESH) && checkScore(rightEye, EYE_THRASH)
+      && checkScore(leftEye, EYE_THRASH)) {
+    const yDelta = rightWrist.y - lastWristY;
+    const eyesDist = euclidDist(leftEye, rightEye);
 
-    if (yDelta >= 0.3 * eyesDist) {
+    if (yDelta >= VERTICAL_CHANGE_FACTOR * eyesDist) {
       if (downsDetected >= DOWNS_SENSITIVITY) {
         downsDetected = 0;
       } else {
@@ -314,7 +291,7 @@ function recordWristMovement(pose) {
       }
       decreaseVolume();
       iterationsToColorPose = ITERATIONS_TO_STAY_COLORED;
-    } else if (yDelta <= -0.3 * eyesDist) {
+    } else if (yDelta <= -VERTICAL_CHANGE_FACTOR * eyesDist) {
       if (upsDetected >= UPS_SENSITIVITY) {
         upsDetected = 0;
       } else {
@@ -345,7 +322,7 @@ function prepareForNewMovement() {
  */
 function respondToPose() {
   for (let i = 0; i < poses.length; i += 1) {
-    const {pose} = poses[i];
+    const { pose } = poses[i];
 
     if (!pose || !player) continue;
 
@@ -364,8 +341,7 @@ function respondToPose() {
       detectOm(pose);
     } else {
       // Indicates that the player is listening
-      document.getElementById('playerStateIndicator').innerHTML = 'Listening';
-      document.getElementById('playerStateIndicator').style.color = '#F7DFA3';
+      changePlayerState('Listening');
       // After activated, listens for the next command:
       if (listeningTimeLeft > 0) {
         if (detectOm(pose)) {
@@ -385,9 +361,9 @@ function respondToPose() {
       } else { // End of listening time.
         resetListeningPeriod();
         if (player.getPlayerState() !== PLAYING) {
-          document.getElementById('playerStateIndicator').innerHTML = 'Paused';
+          changePlayerState('Paused');
         } else {
-          document.getElementById('playerStateIndicator').innerHTML = 'Playing';
+          changePlayerState('Playing');
         }
       }
     }
@@ -398,49 +374,51 @@ function respondToPose() {
 guideButton.onclick = function loadGuid() {
   modal.style.display = 'block';
 };
-// When the user clicks on <span> (x), close the modal
-span.onclick = function closeGuide() {
+// When the user clicks on <guideSpan> (x), close the modal
+guideSpan.onclick = function closeGuide() {
   modal.style.display = 'none';
 };
 
+function updateCurrTime(timeElementId, minutes, seconds){
+  if (seconds < 10) {
+    document.getElementById(timeElementId).innerHTML = `${minutes}:0${seconds}`;
+  } else {
+    document.getElementById(timeElementId).innerHTML = `${minutes}:${seconds}`;
+  }
+}
+
 function updatePlayerProgress() {
+  // Update the progress bar animation:
   const curr = !player ? 0.0 : player.getCurrentTime();
   const total = !player ? 0.0 : player.getDuration();
   musicBar.set((curr / total) * 100);
+
+  // Update the time animations:
   const totalMinutes = Math.floor(total / 60).toString();
   const totalSec = Math.floor(total - totalMinutes * 60).toString();
   const currMinutes = Math.floor(curr / 60).toString();
   const currSec = Math.floor(curr - currMinutes * 60).toString();
   if (player.getPlayerState() === PLAYING && currSec >= 0) {
-    if (currSec < 10) {
-      document.getElementById('currTime').innerHTML = `${currMinutes}:0${currSec}`;
-    } else {
-      document.getElementById('currTime').innerHTML = `${currMinutes}:${currSec}`;
-    }
-    if (totalSec < 10) {
-      document.getElementById('totalTime').innerHTML = `${totalMinutes}:0${totalSec}`;
-    } else {
-      document.getElementById('totalTime').innerHTML = `${totalMinutes}:${totalSec}`;
-    }
+    updateCurrTime('currTime', currMinutes, currSec);
+    updateCurrTime('totalTime', totalMinutes, totalSec);
   }
 }
 
 /**
- * Draws the actual key points
- * @param pose
+ * Draws skeleton key points.
  */
 function keypointsHelper(pose) {
   for (let j = 0; j < pose.keypoints.length; j += 1) {
     // A keypoint is an object describing a body part (like rightArm or leftShoulder)
     const keypoint = pose.keypoints[j];
     // Only draw an ellipse if the pose probability is bigger than 0.2
-    if (keypoint.score > 0.2) {
+    if (keypoint.score > KEYPOINT_CONFIDENCE) {
       if (iterationsToColorPose > 0) {
         fill(163, 247, 223);
       } else {
         fill(247, 223, 163);
       }
-      ellipse(keypoint.position.x, keypoint.position.y, 10, 10);
+      ellipse(keypoint.position.x, keypoint.position.y, KEYPOINT_HEIGHT, KEYPOINT_WIDTH);
     }
   }
 }
@@ -454,19 +432,19 @@ function drawLine(poseKeyPoint1, poseKeyPoint2) {
   } else {
     stroke(247, 223, 163);
   }
-
   line(
-      poseKeyPoint1.x,
-      poseKeyPoint1.y,
-      poseKeyPoint2.x,
-      poseKeyPoint2.y
+    poseKeyPoint1.x, poseKeyPoint1.y,
+    poseKeyPoint2.x, poseKeyPoint2.y,
   );
 }
 
+/**
+ * Draws the lines of the skeleton.
+ */
 function skeletonHelper(pose) {
-  ['left', 'right'].forEach(side => {
-    const [elbow, wrist, shoulder, hip] = ["Elbow", "Wrist", "Shoulder", "Hip"]
-        .map(joint => pose[side + joint]);
+  ['left', 'right'].forEach((side) => {
+    const [elbow, wrist, shoulder, hip] = ['Elbow', 'Wrist', 'Shoulder', 'Hip']
+      .map((joint) => pose[side + joint]);
 
     drawLine(shoulder, elbow);
     drawLine(shoulder, hip);
@@ -486,7 +464,7 @@ function skeletonHelper(pose) {
 function drawSkeleton() {
   // Loop through all the poses detected
   for (let i = 0; i < poses.length; i += 1) {
-    const {pose} = poses[i];
+    const { pose } = poses[i];
 
     if (!prevPose) { // Inits prevPose with the first valid pose:
       if (pose) {
@@ -518,7 +496,7 @@ function drawSkeleton() {
  * Draws the page animations. Called automatically after setup is executed.
  */
 function draw() {
-  image(video, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  image(video, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT); // TODO: ask j.
   background(24, 23, 23);
   drawSkeleton();
   updatePlayerProgress();
