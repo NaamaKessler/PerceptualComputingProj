@@ -13,6 +13,7 @@ const ITERATIONS_TO_STAY_COLORED = 10;
 const PLAYER_HEIGHT = '0';
 const PLAYER_WIDTH = '0';
 const PLAYING = 1;
+const PAUSED = 2;
 const VOLUME_CHANGE = 7;
 
 // Thresholds:
@@ -132,11 +133,9 @@ function changePlayerState(newState){
  * Changes player's state to "PLAYING" if paused and vice-versa.
  */
 function playPauseVid() {
-  if (!player) {
-    return;
-  }
+  if (!player) return;
   const buttonId = document.getElementById('playPause');
-  if (player.getPlayerState() === PLAYING) {
+  if (getPlayerStateSafely() === PLAYING) {
     player.pauseVideo();
     changePlayerState('Paused');
     buttonId.src = 'icons\\play-button.png';
@@ -148,16 +147,12 @@ function playPauseVid() {
 }
 
 function raiseVolume() {
-  if (!player) {
-    return;
-  }
+  if (!player) return;
   player.setVolume(player.getVolume() + VOLUME_CHANGE);
 }
 
 function decreaseVolume() {
-  if (!player) {
-    return;
-  }
+  if (!player) return;
   player.setVolume(player.getVolume() - VOLUME_CHANGE);
 }
 
@@ -169,18 +164,14 @@ function changeSongsMetaData() {
 }
 
 function nextSong() {
-  if (!player) {
-    return;
-  }
+  if (!player) return;
   currentlyPlayingIdx = (currentlyPlayingIdx + 1) % playlistIds.length;
   player.loadVideoById(playlistIds[currentlyPlayingIdx]);
   changeSongsMetaData();
 }
 
 function previousSong() {
-  if (!player) {
-    return;
-  }
+  if (!player) return;
   if (currentlyPlayingIdx === 0) {
     currentlyPlayingIdx = playlistIds.length - 1;
   } else {
@@ -188,6 +179,10 @@ function previousSong() {
   }
   player.loadVideoById(playlistIds[currentlyPlayingIdx]);
   changeSongsMetaData();
+}
+
+function getPlayerStateSafely(){
+  return typeof player.getPlayerState !== 'function' ? PAUSED : player.getPlayerState();
 }
 
 // ----------------------------POSE DETECTION--------------------------------//
@@ -353,7 +348,7 @@ function respondToPose() {
         if (detectOm(pose)) {
           playPauseVid();
           prepareForNewMovement();
-        } else if (player.getPlayerState() === PLAYING) {
+        } else if (getPlayerStateSafely() === PLAYING) {
           if (lastWristX !== -1 && lastWristY !== -1) { // -1 is the initial value.
             recordWristMovement(pose);
           }
@@ -366,7 +361,7 @@ function respondToPose() {
         }
       } else { // End of listening time.
         resetListeningPeriod();
-        if (player.getPlayerState() !== PLAYING) {
+        if (getPlayerStateSafely() !== PLAYING) {
           changePlayerState('Paused');
         } else {
           changePlayerState('Playing');
@@ -394,9 +389,10 @@ function updateCurrTime(timeElementId, minutes, seconds){
 }
 
 function updatePlayerProgress() {
+  if(!player) return;
   // Update the progress bar animation:
-  const curr = !player ? 0.0 : player.getCurrentTime();
-  const total = !player ? 0.0 : player.getDuration();
+  const curr = !player.getCurrentTime ? 0.0 : player.getCurrentTime(); // To work around a bug in Youtube API: https://stackoverflow.com/questions/44523396/player-getduration-and-player-getcurrenttime-is-not-function-error
+  const total = !player.getDuration ? 0.0 : player.getDuration();
   musicBar.set((curr / total) * 100);
 
   // Update the time animations:
@@ -404,7 +400,7 @@ function updatePlayerProgress() {
   const totalSec = Math.floor(total - totalMinutes * 60).toString();
   const currMinutes = Math.floor(curr / 60).toString();
   const currSec = Math.floor(curr - currMinutes * 60).toString();
-  if (player.getPlayerState() === PLAYING && currSec >= 0) {
+  if (getPlayerStateSafely() === PLAYING && currSec >= 0) {
     updateCurrTime('currTime', currMinutes, currSec);
     updateCurrTime('totalTime', totalMinutes, totalSec);
   }
