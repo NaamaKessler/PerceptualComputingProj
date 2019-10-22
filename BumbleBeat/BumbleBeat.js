@@ -1,6 +1,3 @@
-// TODO: update README ("it's just a POC, some things are not working...")
-// TODO: fix bugs: first play, next/prev song
-
 // -----------------------MAGIC NUMBERS--------------------------//
 // Skeleton display:
 const CANVAS_HEIGHT = 350;
