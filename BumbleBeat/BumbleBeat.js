@@ -1,4 +1,3 @@
-// TODO: magic numbers / text where needed.
 // TODO: update README ("it's just a POC, some things are not working...")
 // TODO: fix bugs: first play, next/prev song
 
@@ -24,9 +23,9 @@ const ELBOW_THRESH = 0.2;
 const EYE_THRASH = 0.2;
 
 // Pose sensitivity:
-const SLEEP_TIME = 15; // Determines the number of poses we consider as 'junk' after a spacial pose was detected
-const OM_SENSITIVITY = 5; // Determines how many Oms in a row we consider as a true Om (not noise)
-const LISTENING_TIME = 35; // Determines for how many iterations we listen to the user's commands after activation
+const SLEEP_TIME = 15;
+const OM_SENSITIVITY = 5;
+const LISTENING_TIME = 35;
 const DOWNS_SENSITIVITY = 10;
 const UPS_SENSITIVITY = 10;
 
@@ -47,6 +46,7 @@ const tag = document.createElement('script');
 tag.src = 'https://www.youtube.com/iframe_api';
 const firstScriptTag = document.getElementsByTagName('script')[0];
 firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
 // Currently we have just some hard-coded songs for POC:
 const playlistIds = ['s3Q80mk7bxE', 'nqxVMLVe62U', '0fAQhSRLQnM', 'unfzfe8f9NI'];
 const albumsCoverPics = ['album_cover_pics/Diana_Ross_Presents_the_Jackson_5.jpg',
@@ -195,30 +195,21 @@ function previousSong() {
 }
 
 // ----------------------------POSE DETECTION--------------------------------//
-/**
- * Calculates the Euclidean distance between two key points in a pose object.
- */
 function euclidDist(keyPoint1, keyPoint2) {
   return Math.sqrt(((keyPoint1.y - keyPoint2.y) ** 2)
       + ((keyPoint1.x - keyPoint2.x) ** 2));
 }
 
-/**
- * Tests if two key points are in the same height.
- */
 function sameHeight(keyPoint1, keyPoint2, errThresh) {
   return Math.abs(keyPoint1.y - keyPoint2.y) < errThresh;
 }
 
-/**
- * Returns true if the score of a key point is above the given threshold.
- */
 function checkScore({ confidence }, threshold) {
   return confidence > threshold;
 }
 
 /**
- * Tests if the elbows were detected with high confidence and have in the same height.
+ * Tests if the elbows were detected with high confidence and are in the same height.
  */
 function elbowsAligned({ leftElbow, rightElbow }, errThresh) {
   return checkScore(leftElbow, ELBOW_THRESH) && checkScore(rightElbow, ELBOW_THRESH)
@@ -243,9 +234,6 @@ function wristsInwards({
   return rightWrist.x > rightElbow.x && leftWrist.x < leftElbow.x;
 }
 
-/**
- * Tests if the pose is the Om pose.
- */
 function detectOm(pose) { // Om is the name we gave the main gesture: a kind of a hand clapping.
   const eyesDist = euclidDist(pose.leftEye, pose.rightEye);
   if (elbowsAligned(pose, eyesDist) && closeWrists(pose, WRIST_DIST_FACTOR * eyesDist)
@@ -404,10 +392,7 @@ function updatePlayerProgress() {
   }
 }
 
-/**
- * Draws skeleton key points.
- */
-function keypointsHelper(pose) {
+function drawSkeletonKeypoints(pose) {
   for (let j = 0; j < pose.keypoints.length; j += 1) {
     // A keypoint is an object describing a body part (like rightArm or leftShoulder)
     const keypoint = pose.keypoints[j];
@@ -423,9 +408,6 @@ function keypointsHelper(pose) {
   }
 }
 
-/**
- * Draws a line between two key points.
- */
 function drawLine(poseKeyPoint1, poseKeyPoint2) {
   if (iterationsToColorPose > 0) {
     stroke(163, 247, 223);
@@ -438,10 +420,7 @@ function drawLine(poseKeyPoint1, poseKeyPoint2) {
   );
 }
 
-/**
- * Draws the lines of the skeleton.
- */
-function skeletonHelper(pose) {
+function drawSkeletonLines(pose) {
   ['left', 'right'].forEach((side) => {
     const [elbow, wrist, shoulder, hip] = ['Elbow', 'Wrist', 'Shoulder', 'Hip']
       .map((joint) => pose[side + joint]);
@@ -458,9 +437,6 @@ function skeletonHelper(pose) {
   }
 }
 
-/**
- * A function to draw ellipses over the detected key points.
- */
 function drawSkeleton() {
   // Loop through all the poses detected
   for (let i = 0; i < poses.length; i += 1) {
@@ -477,16 +453,16 @@ function drawSkeleton() {
     }
 
     if (!pose) {
-      keypointsHelper(prevPose); // Draws the last valid pose.
-      skeletonHelper(prevPose);
+      drawSkeletonKeypoints(prevPose); // Draws the last valid pose.
+      drawSkeletonLines(prevPose);
     } else {
       if (pose.score < POSE_CONFIDENCE) {
-        keypointsHelper(prevPose); // Draws the last valid pose.
-        skeletonHelper(prevPose);
+        drawSkeletonKeypoints(prevPose); // Draws the last valid pose.
+        drawSkeletonLines(prevPose);
         return;
       }
-      keypointsHelper(pose);
-      skeletonHelper(pose);
+      drawSkeletonKeypoints(pose);
+      drawSkeletonLines(pose);
       prevPose = pose;
     }
   }
