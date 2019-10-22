@@ -6,7 +6,8 @@ to free users from the need to be close to any sort of controller in order to af
 
 ![alt text](READMEImages/BumbleBeatInAction.PNG "BumbleBeat in action")
 
-The pose detection itself is preformed by TensorFlow's PoseNet library ([see here](https://www.tensorflow.org/lite/models/pose_estimation/overview))
+The pose detection itself is preformed by TensorFlow's PoseNet library ([poseNet](https://www.tensorflow.org/lite/models/pose_estimation/overview))
+and we drew animations using the p5.js library ([p5.js](https://p5js.org/)). 
 We also used Youtube's API in order to load a few example songs.
 
 
@@ -15,3 +16,5 @@ In order to run BumbleBeat, simply run PerceptualComputingProj\BumbleBeat\Bumble
 The interface is pretty simple, it is described in this guide we made:
 
 ![alt text](READMEImages/GuideFinished.png "guide")
+Pay attention that BumbleBeat is just a POC, so for now we only have a small number of pre-defined 
+songs, and there might be some small things that don't work as expected.
