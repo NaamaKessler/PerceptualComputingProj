@@ -6,9 +6,9 @@ to free users from the need to be close to any sort of controller in order to af
 
 ![alt text](READMEImages/BumbleBeatInAction.PNG "BumbleBeat in action")
 
-The pose detection itself is preformed by TensorFlow's PoseNet library ([poseNet](https://www.tensorflow.org/lite/models/pose_estimation/overview))
-and we drew animations using the p5.js library ([p5.js](https://p5js.org/)). 
-We also used Youtube's API in order to load a few example songs.
+The pose detection is preformed by TensorFlow's [poseNet module](https://medium.com/tensorflow/real-time-human-pose-estimation-in-the-browser-with-tensorflow-js-7dd0bc881cd5)
+using [ml5 interface](https://ml5js.org/reference/api-PoseNet/), and we drew animations using the [p5.js library](https://p5js.org/). 
+We also used [Youtube API](https://developers.google.com/youtube/iframe_api_reference) in order to load a few example songs.
 
 
 ## Usage
