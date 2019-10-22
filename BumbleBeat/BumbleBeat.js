@@ -121,7 +121,7 @@ function setup() {
 }
 
 // ----------------------------PLAYER CONTROL-----------------------------//
-function changePlayerState(newState){
+function changePlayerState(newState) {
   document.getElementById('playerStateIndicator').innerHTML = newState;
   document.getElementById('playerStateIndicator').style.color = '#F7DFA3';
 }
@@ -178,7 +178,7 @@ function previousSong() {
   changeSongsMetaData();
 }
 
-function getPlayerStateSafely(){
+function getPlayerStateSafely() {
   return typeof player.getPlayerState !== 'function' ? PAUSED : player.getPlayerState();
 }
 
@@ -227,8 +227,8 @@ function wristsInwards({
  * appropriate to the object's depth, we use the distance between the eyes as a measure of what's
  * considered a "small distance" in the picture.
  */
-function getMaxWristsDistance(eyesDist){
-  return 1.9 * eyesDist;  // 1.9 is the constant we think gives the best results.
+function getMaxWristsDistance(eyesDist) {
+  return 1.9 * eyesDist; // 1.9 is the constant we think gives the best results.
 }
 
 /**
@@ -268,8 +268,8 @@ function updateWristCoords({ rightWrist }) {
  * In order to get a distance appropriate to the object's depth, we use the distance between the
  * eyes as a measure of what's considered a "small distance" in the picture.
  */
-function getMinVerticalChange(eyesDist){
-  return 0.3 * eyesDist;  // 0.3 is the constant we thinks works best.
+function getMinVerticalChange(eyesDist) {
+  return 0.3 * eyesDist; // 0.3 is the constant we thinks works best.
 }
 
 /**
@@ -352,7 +352,7 @@ function respondToPose() {
           updateWristCoords(pose);
           listeningTimeLeft -= 1;
         } else {
-          lastWristX = -1;  // initial value.
+          lastWristX = -1; // initial value.
           lastWristY = -1;
           listeningTimeLeft -= 1;
         }
@@ -377,7 +377,7 @@ guideSpan.onclick = function closeGuide() {
   modal.style.display = 'none';
 };
 
-function updateCurrTime(timeElementId, minutes, seconds){
+function updateCurrTime(timeElementId, minutes, seconds) {
   if (seconds < 10) {
     document.getElementById(timeElementId).innerHTML = `${minutes}:0${seconds}`;
   } else {
@@ -386,7 +386,7 @@ function updateCurrTime(timeElementId, minutes, seconds){
 }
 
 function updatePlayerProgress() {
-  if(!player) return;
+  if (!player) return;
   // Update the progress bar animation:
   const curr = !player.getCurrentTime ? 0.0 : player.getCurrentTime(); // To work around a bug in Youtube API: https://stackoverflow.com/questions/44523396/player-getduration-and-player-getcurrenttime-is-not-function-error
   const total = !player.getDuration ? 0.0 : player.getDuration();
