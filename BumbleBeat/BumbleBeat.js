@@ -29,10 +29,6 @@ const LISTENING_TIME = 35;
 const DOWNS_SENSITIVITY = 10;
 const UPS_SENSITIVITY = 10;
 
-// Distance factors:
-const WRIST_DIST_FACTOR  =1.9;
-const VERTICAL_CHANGE_FACTOR = 0.3;
-
 // -----------------------CONSTANTS--------------------------//
 // HTML related:
 const listeningBar = new ldBar('#myItem1');
@@ -64,7 +60,7 @@ let listeningTimeLeft = 0;
 let omsDetected = 0;
 let upsDetected = 0;
 let downsDetected = 0;
-let lastWristX = -1; // TODO: ask J  if it's awful
+let lastWristX = -1;
 let lastWristY = -1;
 
 // Skeleton related:
@@ -234,9 +230,22 @@ function wristsInwards({
   return rightWrist.x > rightElbow.x && leftWrist.x < leftElbow.x;
 }
 
-function detectOm(pose) { // Om is the name we gave the main gesture: a kind of a hand clapping.
+/**
+ * Gets the maximal distance allowed between wrists in the Om gesture. In order to get a distance
+ * appropriate to the object's depth, we use the distance between the eyes as a measure of what's
+ * considered a "small distance" in the picture.
+ */
+function getMaxWristsDistance(eyesDist){
+  return 1.9 * eyesDist;  // 1.9 is the constant we think gives the best results.
+}
+
+/**
+ * Detects an Om pose. Om is the name we gave the main gesture: a kind of a hand clapping.
+ */
+function detectOm(pose) {
+  // eyesDist is used as a measure of what considered a "small distance" in the picture:
   const eyesDist = euclidDist(pose.leftEye, pose.rightEye);
-  if (elbowsAligned(pose, eyesDist) && closeWrists(pose, WRIST_DIST_FACTOR * eyesDist)
+  if (elbowsAligned(pose, eyesDist) && closeWrists(pose, getMaxWristsDistance(eyesDist))
       && wristsInwards(pose)) {
     poseCounter += 1;
     if (poseCounter === OM_SENSITIVITY) { // If we detected enough Oms, its probably not a noise.
@@ -263,6 +272,15 @@ function updateWristCoords({ rightWrist }) {
 }
 
 /**
+ * Gets the minimal distance change that we consider to be a vertical wrist movement.
+ * In order to get a distance appropriate to the object's depth, we use the distance between the
+ * eyes as a measure of what's considered a "small distance" in the picture.
+ */
+function getMinVerticalChange(eyesDist){
+  return 0.3 * eyesDist;  // 0.3 is the constant we thinks works best.
+}
+
+/**
  * Records the wrist movements of the user and keeps them in the global array detectedDirections[].
  */
 function recordWristMovement({ rightWrist, leftEye, rightEye }) {
@@ -271,7 +289,7 @@ function recordWristMovement({ rightWrist, leftEye, rightEye }) {
     const yDelta = rightWrist.y - lastWristY;
     const eyesDist = euclidDist(leftEye, rightEye);
 
-    if (yDelta >= VERTICAL_CHANGE_FACTOR * eyesDist) {
+    if (yDelta >= getMinVerticalChange(eyesDist)) {
       if (downsDetected >= DOWNS_SENSITIVITY) {
         downsDetected = 0;
       } else {
@@ -279,7 +297,7 @@ function recordWristMovement({ rightWrist, leftEye, rightEye }) {
       }
       decreaseVolume();
       iterationsToColorPose = ITERATIONS_TO_STAY_COLORED;
-    } else if (yDelta <= -VERTICAL_CHANGE_FACTOR * eyesDist) {
+    } else if (yDelta <= -getMinVerticalChange(eyesDist)) {
       if (upsDetected >= UPS_SENSITIVITY) {
         upsDetected = 0;
       } else {
@@ -336,13 +354,13 @@ function respondToPose() {
           playPauseVid();
           prepareForNewMovement();
         } else if (player.getPlayerState() === PLAYING) {
-          if (lastWristX !== -1 && lastWristY !== -1) {
+          if (lastWristX !== -1 && lastWristY !== -1) { // -1 is the initial value.
             recordWristMovement(pose);
           }
           updateWristCoords(pose);
           listeningTimeLeft -= 1;
         } else {
-          lastWristX = -1;
+          lastWristX = -1;  // initial value.
           lastWristY = -1;
           listeningTimeLeft -= 1;
         }
@@ -396,7 +414,7 @@ function drawSkeletonKeypoints(pose) {
   for (let j = 0; j < pose.keypoints.length; j += 1) {
     // A keypoint is an object describing a body part (like rightArm or leftShoulder)
     const keypoint = pose.keypoints[j];
-    // Only draw an ellipse if the pose probability is bigger than 0.2
+    // Only draw an ellipse if the point score is bigger than 0.2
     if (keypoint.score > KEYPOINT_CONFIDENCE) {
       if (iterationsToColorPose > 0) {
         fill(163, 247, 223);
@@ -472,7 +490,8 @@ function drawSkeleton() {
  * Draws the page animations. Called automatically after setup is executed.
  */
 function draw() {
-  image(video, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT); // TODO: ask j.
+  // image is set at the beginning of it's container, hence 0,0:
+  image(video, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   background(24, 23, 23);
   drawSkeleton();
   updatePlayerProgress();
