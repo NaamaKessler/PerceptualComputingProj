@@ -16,5 +16,6 @@ In order to run BumbleBeat, simply run PerceptualComputingProj\BumbleBeat\Bumble
 The interface is pretty simple, it is described in this guide we made:
 
 ![alt text](READMEImages/GuideFinished.png "guide")
+
 Pay attention that BumbleBeat is just a POC, so for now we only have a small number of pre-defined 
 songs, and there might be some small things that don't work as expected.
